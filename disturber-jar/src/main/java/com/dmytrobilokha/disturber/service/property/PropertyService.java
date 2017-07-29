@@ -4,7 +4,9 @@ import com.dmytrobilokha.disturber.Constants;
 
 import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.Reader;
 import java.io.Writer;
 import java.nio.file.Files;
@@ -44,8 +46,10 @@ public class PropertyService {
     }
 
     private void copyDefaultsToConfig() {
-        try {
-            Files.copy(getClass().getResourceAsStream(DEFAULT_PROPERTIES_FILE), configFilePath);
+        try (InputStream defaultPropertiesInputStream = getClass().getResourceAsStream(DEFAULT_PROPERTIES_FILE);
+             BufferedInputStream defaultPropertiesBufferedInputStream
+                     = new BufferedInputStream(defaultPropertiesInputStream)){
+            Files.copy(defaultPropertiesBufferedInputStream, configFilePath);
         } catch (IOException | SecurityException ex) {
             throw new IllegalStateException("Unable to copy default properties to the config file '"
                     + configFilePath + '\'', ex);
@@ -54,7 +58,7 @@ public class PropertyService {
 
     private Properties loadPropertiesFile() {
         Properties appProperties = new Properties();
-        try(Reader configFileReader = Files.newBufferedReader(configFilePath)) {
+        try (Reader configFileReader = Files.newBufferedReader(configFilePath)) {
             appProperties.load(configFileReader);
         } catch (IOException ex) {
             throw new IllegalStateException("Unable to load application properties from file '"
