@@ -8,9 +8,9 @@ import static com.dmytrobilokha.disturber.Constants.NEW_LINE;
  * The enumeration represents application property
  */
 public enum Property {
-    COLOR("color", true, Type.STRING)
+    COLOR("color", false, Type.STRING)
     , PROPERTIES_VERSION("properties.version", true, Type.INTEGER)
-    , TEST_ENUM("enum", true, Type.PROPERTY2);
+    , TEST_ENUM("enum", false, Type.PROPERTY2);
 
     final String key;
     final boolean isMandatory;
