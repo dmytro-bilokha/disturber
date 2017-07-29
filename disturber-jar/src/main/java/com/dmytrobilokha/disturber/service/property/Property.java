@@ -51,6 +51,15 @@ public enum Property {
         return toStringConverter.apply(value);
     }
 
+    @Override
+    public String toString() {
+        return "Property{" +
+                "key='" + key + '\'' +
+                ", isMandatory=" + isMandatory +
+                ", clazz=" + clazz +
+                '}';
+    }
+
     enum Type {
         STRING(String.class, string -> string)
         , INTEGER(Integer.class, Integer::valueOf)
