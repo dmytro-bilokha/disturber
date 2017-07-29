@@ -5,12 +5,12 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.dmytrobilokha</groupId>
         <artifactId>disturber-parent</artifactId>
+        <groupId>com.dmytrobilokha</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>disturber-gui-test</artifactId>
+    <artifactId>disturber-integration-test</artifactId>
     <packaging>jar</packaging>
 
     <dependencies>
@@ -29,22 +29,6 @@
             <groupId>org.mockito</groupId>
             <artifactId>mockito-all</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>testfx-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>testfx-junit</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.testfx</groupId>
-            <artifactId>openjfx-monocle</artifactId>
-        </dependency>
-
     </dependencies>
 
 </project>

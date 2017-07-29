@@ -31,11 +31,11 @@ public class PropertyService {
     private Path configFilePath;
 
     @PostConstruct
-    public void init() {
+    void init() {
         String configDirLocation = System.getProperty(Constants.CONFIG_DIR_PROPERTY_KEY);
         if (configDirLocation == null)
             throw new IllegalStateException("Configuration directory is not defined");
-        String configFileLocation = configDirLocation + Constants.FILE_SEPARATOR + Constants.APPLICATION_NAME + ".properties";
+        String configFileLocation = configDirLocation + Constants.FILE_SEPARATOR + Constants.PROPERTIES_FILE_NAME;
         configFilePath = Paths.get(configFileLocation);
         if (Files.notExists(configFilePath))
             copyDefaultsToConfig();

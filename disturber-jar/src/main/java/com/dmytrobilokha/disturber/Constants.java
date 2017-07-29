@@ -7,6 +7,7 @@ public final class Constants {
     public static final String APPLICATION_NAME = "disturber";
     public static final String LOGFILE_PROPERTY_KEY = APPLICATION_NAME + ".logfile";
     public static final String CONFIG_DIR_PROPERTY_KEY = APPLICATION_NAME + ".configdir";
+    public static final String PROPERTIES_FILE_NAME = APPLICATION_NAME + ".properties";
     public static final String APPLICATION_TITLE = "Java FX Application Skeleton";
     public static final String FILE_SEPARATOR = System.getProperty("file.separator");
     public static final String NEW_LINE = System.lineSeparator();
