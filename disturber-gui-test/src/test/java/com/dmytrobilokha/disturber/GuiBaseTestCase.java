@@ -17,7 +17,7 @@ public abstract class GuiBaseTestCase extends ApplicationTest {
     private Parent parent;
 
     static {
-        if (System.getProperty("test.headless") != null) {
+        if (System.getProperty("test.headed") == null) {
             System.setProperty("testfx.robot", "glass");
             System.setProperty("testfx.headless", "true");
             System.setProperty("prism.order", "sw");
