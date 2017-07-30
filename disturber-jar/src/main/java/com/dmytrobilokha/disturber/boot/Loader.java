@@ -20,7 +20,7 @@ import java.util.Set;
 
 public class Loader extends Application {
 
-    private static final String MAIN_FXML = "/fxml/TabPanel.fxml";
+    private static final String MAIN_FXML = "/fxml/MainLayout.fxml";
 
     public static void main(String[] args) {
         launch(args);
