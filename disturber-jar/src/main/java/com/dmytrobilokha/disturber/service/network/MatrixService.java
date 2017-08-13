@@ -7,7 +7,7 @@ import retrofit2.http.GET;
 /**
  * Created by dimon on 13.08.17.
  */
-public interface MatrixService {
+interface MatrixService {
 
     @GET("random")
     Call<MessageDto> getQuote();
