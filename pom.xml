@@ -19,6 +19,7 @@
         <owb.version>1.7.3</owb.version>
         <logback.version>1.2.3</logback.version>
         <jul-to-slf4j.version>1.7.25</jul-to-slf4j.version>
+        <retrofit.version>2.3.0</retrofit.version>
 
         <junit.version>4.12</junit.version>
         <mockito.version>1.10.19</mockito.version>
@@ -91,6 +92,20 @@
                 <groupId>org.apache.openwebbeans</groupId>
                 <artifactId>openwebbeans-impl</artifactId>
                 <version>${owb.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.squareup.retrofit2</groupId>
+                <artifactId>retrofit</artifactId>
+                <version>${retrofit.version}</version>
+                <scope>compile</scope>
+            </dependency>
+
+            <dependency>
+                <groupId>com.squareup.retrofit2</groupId>
+                <artifactId>converter-jackson</artifactId>
+                <version>${retrofit.version}</version>
                 <scope>compile</scope>
             </dependency>
 

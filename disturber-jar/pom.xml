@@ -3,9 +3,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-	<groupId>com.dmytrobilokha</groupId>
-	<artifactId>disturber-parent</artifactId>
-	<version>1.0-SNAPSHOT</version>
+        <groupId>com.dmytrobilokha</groupId>
+        <artifactId>disturber-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
     </parent>
 
 
@@ -59,6 +59,16 @@
         <dependency>
             <groupId>org.apache.openwebbeans</groupId>
             <artifactId>openwebbeans-impl</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.retrofit2</groupId>
+            <artifactId>retrofit</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.squareup.retrofit2</groupId>
+            <artifactId>converter-jackson</artifactId>
         </dependency>
 
         <dependency>
