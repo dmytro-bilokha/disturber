@@ -11,15 +11,17 @@ public class SynchronizeMessageService extends Service<Void> {
 
     private final ObservableList<String> messageList;
     private final String baseUrl;
+    private final NetworkConnectionConfig connectionConfig;
 
-    SynchronizeMessageService(ObservableList<String> messageList, String baseUrl) {
+    SynchronizeMessageService(ObservableList<String> messageList, String baseUrl, NetworkConnectionConfig connectionConfig) {
         this.messageList = messageList;
         this.baseUrl = baseUrl;
+        this.connectionConfig = connectionConfig;
     }
 
     @Override
     protected Task<Void> createTask() {
-        return new SynchronizeMessageTask(messageList, baseUrl);
+        return new SynchronizeMessageTask(messageList, baseUrl, connectionConfig);
     }
 
 }

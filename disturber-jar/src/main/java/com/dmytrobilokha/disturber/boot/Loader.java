@@ -49,6 +49,7 @@ public class Loader extends Application {
 
     @Override
     public void stop() {
+        System.out.println("Exiting " + Constants.APPLICATION_NAME + "...");
         ContainerManager.stopContainer();
     }
 

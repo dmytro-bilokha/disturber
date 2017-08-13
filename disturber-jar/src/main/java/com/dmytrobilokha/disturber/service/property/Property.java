@@ -9,6 +9,8 @@ import static com.dmytrobilokha.disturber.Constants.NEW_LINE;
  */
 public enum Property {
     COLOR("color", false, Type.STRING)
+    , NETWORK_SYNC_TIMEOUT("network.sync.timeout", true, Type.INTEGER)
+    , NETWORK_SYNC_INTERVAL("network.sync.interval", true, Type.INTEGER)
     , PROPERTIES_VERSION("properties.version", true, Type.INTEGER)
     , TEST_ENUM("enum", false, Type.PROPERTY2);
 
