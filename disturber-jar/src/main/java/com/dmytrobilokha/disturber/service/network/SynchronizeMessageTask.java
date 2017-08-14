@@ -1,6 +1,7 @@
 package com.dmytrobilokha.disturber.service.network;
 
 import com.dmytrobilokha.disturber.model.network.MessageDto;
+import com.dmytrobilokha.disturber.service.connectionconfig.NetworkConnectionConfig;
 import javafx.application.Platform;
 import javafx.concurrent.Task;
 import okhttp3.OkHttpClient;

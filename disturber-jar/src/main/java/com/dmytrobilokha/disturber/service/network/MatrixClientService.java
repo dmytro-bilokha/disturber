@@ -1,8 +1,7 @@
 package com.dmytrobilokha.disturber.service.network;
 
 
-import com.dmytrobilokha.disturber.service.property.Property;
-import com.dmytrobilokha.disturber.service.property.PropertyService;
+import com.dmytrobilokha.disturber.service.connectionconfig.NetworkConnectionConfigFactory;
 import javafx.collections.ObservableList;
 
 import javax.enterprise.context.ApplicationScoped;
@@ -14,17 +13,20 @@ import javax.inject.Inject;
 @ApplicationScoped
 public class MatrixClientService {
 
-    @Inject
-    private PropertyService propertyService;
+    private NetworkConnectionConfigFactory networkConnectionConfigFactory;
 
-    public void connect(ObservableList<String> messageList, String baseUrl) {
-        new SynchronizeMessageService(messageList, baseUrl, getNetworkConnectionConfig()).start();
+    protected MatrixClientService() {
+        //Empty no-args constructor to keep CDI framework happy
     }
 
-    private NetworkConnectionConfig getNetworkConnectionConfig() {
-       return new NetworkConnectionConfig(
-               propertyService.getInteger(Property.NETWORK_SYNC_TIMEOUT)
-               , propertyService.getInteger(Property.NETWORK_SYNC_INTERVAL));
+    @Inject
+    public MatrixClientService(NetworkConnectionConfigFactory networkConnectionConfigFactory) {
+        this.networkConnectionConfigFactory = networkConnectionConfigFactory;
+    }
+
+    public void connect(ObservableList<String> messageList, String baseUrl) {
+        new SynchronizeMessageService(messageList, baseUrl
+                , networkConnectionConfigFactory.getNetworkConnectionConfig()).start();
     }
 
 }
