@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.service.connectionconfig;
+package com.dmytrobilokha.disturber.config.connection;
 
 /**
  * The class represents network connection configuration
@@ -21,4 +21,11 @@ public class NetworkConnectionConfig {
         return connectionInterval;
     }
 
+    @Override
+    public String toString() {
+        return "NetworkConnectionConfig{" +
+                "connectionTimeout=" + connectionTimeout +
+                ", connectionInterval=" + connectionInterval +
+                '}';
+    }
 }

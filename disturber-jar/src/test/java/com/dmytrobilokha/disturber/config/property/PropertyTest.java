@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.service.property;
+package com.dmytrobilokha.disturber.config.property;
 
 import org.junit.Test;
 

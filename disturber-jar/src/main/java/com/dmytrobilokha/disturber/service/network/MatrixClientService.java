@@ -1,7 +1,7 @@
 package com.dmytrobilokha.disturber.service.network;
 
 
-import com.dmytrobilokha.disturber.service.connectionconfig.NetworkConnectionConfigFactory;
+import com.dmytrobilokha.disturber.config.connection.NetworkConnectionConfigFactory;
 import javafx.collections.ObservableList;
 
 import javax.enterprise.context.ApplicationScoped;

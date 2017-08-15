@@ -1,7 +1,7 @@
-package com.dmytrobilokha.disturber.service.connectionconfig;
+package com.dmytrobilokha.disturber.config.connection;
 
-import com.dmytrobilokha.disturber.service.property.Property;
-import com.dmytrobilokha.disturber.service.property.PropertyService;
+import com.dmytrobilokha.disturber.config.property.Property;
+import com.dmytrobilokha.disturber.config.property.PropertyService;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;

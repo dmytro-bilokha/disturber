@@ -1,6 +1,6 @@
 package com.dmytrobilokha.disturber.service.network;
 
-import com.dmytrobilokha.disturber.service.connectionconfig.NetworkConnectionConfig;
+import com.dmytrobilokha.disturber.config.connection.NetworkConnectionConfig;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
