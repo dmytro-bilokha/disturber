@@ -1,18 +1,13 @@
 package com.dmytrobilokha.disturber.config.property;
 
 import com.dmytrobilokha.disturber.Constants;
+import com.dmytrobilokha.disturber.service.fs.FsService;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
-import java.io.BufferedInputStream;
+import javax.inject.Inject;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.Reader;
-import java.io.Writer;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.EnumMap;
 import java.util.Map;
@@ -29,27 +24,31 @@ public class PropertyService {
 
     private static final String DEFAULT_PROPERTIES_FILE = "/defaults.properties";
 
+    private FsService fsService;
+
     private Map<Property, Object> propertyMap;
     private Path configFilePath;
 
-    @PostConstruct
-    void init() {
+    protected PropertyService() {
+        //Empty no-args constructor to keep CDI framework happy
+    }
+
+    @Inject
+    public PropertyService(FsService fsService) {
+        this.fsService = fsService;
         String configDirLocation = System.getProperty(Constants.CONFIG_DIR_PROPERTY_KEY);
         if (configDirLocation == null)
             throw new IllegalStateException("Configuration directory is not defined");
         String configFileLocation = configDirLocation + Constants.FILE_SEPARATOR + Constants.PROPERTIES_FILE_NAME;
         configFilePath = Paths.get(configFileLocation);
-        if (Files.notExists(configFilePath))
-            copyDefaultsToConfig();
+        ensureConfigFileExists();
         Properties appProperties = loadPropertiesFile();
         propertyMap = parseProperties(appProperties);
     }
 
-    private void copyDefaultsToConfig() {
-        try (InputStream defaultPropertiesInputStream = getClass().getResourceAsStream(DEFAULT_PROPERTIES_FILE);
-             BufferedInputStream defaultPropertiesBufferedInputStream
-                     = new BufferedInputStream(defaultPropertiesInputStream)){
-            Files.copy(defaultPropertiesBufferedInputStream, configFilePath);
+    private void ensureConfigFileExists() {
+        try {
+            fsService.copyResourceIfFileAbsent(configFilePath, DEFAULT_PROPERTIES_FILE);
         } catch (IOException | SecurityException ex) {
             throw new IllegalStateException("Unable to copy default properties to the config file '"
                     + configFilePath + '\'', ex);
@@ -58,9 +57,9 @@ public class PropertyService {
 
     private Properties loadPropertiesFile() {
         Properties appProperties = new Properties();
-        try (Reader configFileReader = Files.newBufferedReader(configFilePath)) {
-            appProperties.load(configFileReader);
-        } catch (IOException ex) {
+        try {
+            fsService.readFile(configFilePath, appProperties::load);
+        } catch (IOException | SecurityException ex) {
             throw new IllegalStateException("Unable to load application properties from file '"
                     + configFilePath + '\'', ex);
         }
@@ -142,11 +141,9 @@ public class PropertyService {
     }
 
     public void saveProperties() throws IOException {
-        try (Writer configFileWriter = Files.newBufferedWriter(configFilePath
-                , StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             Properties appProperties = propertyMapToProperties();
-            appProperties.store(configFileWriter, "Properties updated at " + LocalDateTime.now());
-        }
+            fsService.writeFile(configFilePath
+                    , writer -> appProperties.store(writer, "Properties updated at " + LocalDateTime.now()));
     }
 
     private Properties propertyMapToProperties() {
