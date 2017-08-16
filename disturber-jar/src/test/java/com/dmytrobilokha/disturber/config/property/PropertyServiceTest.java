@@ -10,11 +10,14 @@ import org.mockito.Mockito;
 import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.nio.file.Paths;
 
 import static com.dmytrobilokha.disturber.config.property.MockProperties.INVALID_VERSION;
 import static com.dmytrobilokha.disturber.config.property.MockProperties.MINIMAL_PROPERTIES;
 import static com.dmytrobilokha.disturber.config.property.MockProperties.MISSING_MANDATORY;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 
@@ -24,6 +27,7 @@ import static org.mockito.Mockito.doAnswer;
 public class PropertyServiceTest {
 
     private FsService mockFsService;
+    private StringWriter mockWriter;
 
     @Before
     public void init() throws IOException {
@@ -32,7 +36,7 @@ public class PropertyServiceTest {
     }
 
     @Test
-    public void testEnsuresConfigFileExistsOnConstraction() throws IOException {
+    public void testEnsuresConfigFileExistsOnConstruction() throws IOException {
         setupMockFsService(MINIMAL_PROPERTIES);
         PropertyService propertyService = new PropertyService(mockFsService);
         Mockito.verify(mockFsService, Mockito.times(1))
@@ -47,6 +51,12 @@ public class PropertyServiceTest {
                 return null;
             })
             .when(mockFsService).readFile(any(), any(IoConsumer.class));
+        mockWriter = new StringWriter(1000);
+        doAnswer(invocation -> {
+            ((IoConsumer<Writer>)invocation.getArguments()[1]).accept(mockWriter);
+            return null;
+            })
+            .when(mockFsService).writeFile(any(), any(IoConsumer.class));
     }
 
     @Test(expected = IllegalStateException.class)
@@ -59,6 +69,23 @@ public class PropertyServiceTest {
     public void testFailsIfPropertyValueIsNotParsable() throws IOException {
         setupMockFsService(INVALID_VERSION);
         PropertyService propertyService = new PropertyService(mockFsService);
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void testFailsIfWrongMethodCalled() throws IOException {
+        setupMockFsService(MINIMAL_PROPERTIES);
+        PropertyService propertyService = new PropertyService(mockFsService);
+        propertyService.getString(Property.PROPERTIES_VERSION);
+    }
+
+    @Test
+    public void testWritesChanges() throws IOException {
+        setupMockFsService(MINIMAL_PROPERTIES);
+        PropertyService propertyService = new PropertyService(mockFsService);
+        propertyService.setInteger(Property.PROPERTIES_VERSION, 42);
+        propertyService.saveProperties();
+        String output = mockWriter.toString();
+        assertTrue(output.contains("properties.version=42"));
     }
 
 }
