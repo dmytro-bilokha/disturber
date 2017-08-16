@@ -17,6 +17,7 @@ import java.nio.file.Paths;
 import static com.dmytrobilokha.disturber.config.property.MockProperties.INVALID_VERSION;
 import static com.dmytrobilokha.disturber.config.property.MockProperties.MINIMAL_PROPERTIES;
 import static com.dmytrobilokha.disturber.config.property.MockProperties.MISSING_MANDATORY;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -26,13 +27,15 @@ import static org.mockito.Mockito.doAnswer;
  */
 public class PropertyServiceTest {
 
+    private static final String FAKE_CONFIGDIR_LOCATION = "blablabla";
+
     private FsService mockFsService;
     private StringWriter mockWriter;
 
     @Before
     public void init() throws IOException {
         mockFsService = Mockito.mock(FsService.class);
-        System.setProperty(Constants.CONFIG_DIR_PROPERTY_KEY, "blablabla");
+        System.setProperty(Constants.CONFIG_DIR_PROPERTY_KEY, FAKE_CONFIGDIR_LOCATION);
     }
 
     @Test
@@ -40,7 +43,7 @@ public class PropertyServiceTest {
         setupMockFsService(MINIMAL_PROPERTIES);
         PropertyService propertyService = new PropertyService(mockFsService);
         Mockito.verify(mockFsService, Mockito.times(1))
-                .copyResourceIfFileAbsent(Paths.get("blablabla" + Constants.FILE_SEPARATOR
+                .copyResourceIfFileAbsent(Paths.get(FAKE_CONFIGDIR_LOCATION + Constants.FILE_SEPARATOR
                         + Constants.PROPERTIES_FILE_NAME), "/defaults.properties");
     }
 
@@ -50,7 +53,7 @@ public class PropertyServiceTest {
                 ((IoConsumer<Reader>)invocation.getArguments()[1]).accept(reader);
                 return null;
             })
-            .when(mockFsService).readFile(any(), any(IoConsumer.class));
+            .when(mockFsService).consumeFile(any(), any(IoConsumer.class));
         mockWriter = new StringWriter(1000);
         doAnswer(invocation -> {
             ((IoConsumer<Writer>)invocation.getArguments()[1]).accept(mockWriter);
@@ -61,31 +64,37 @@ public class PropertyServiceTest {
 
     @Test(expected = IllegalStateException.class)
     public void testFailsIfMandatoryPropertyAbsent() throws IOException {
-        setupMockFsService(MISSING_MANDATORY);
-        PropertyService propertyService = new PropertyService(mockFsService);
+        initPropertyService(MISSING_MANDATORY);
     }
 
     @Test(expected = IllegalStateException.class)
     public void testFailsIfPropertyValueIsNotParsable() throws IOException {
-        setupMockFsService(INVALID_VERSION);
-        PropertyService propertyService = new PropertyService(mockFsService);
+        initPropertyService(INVALID_VERSION);
     }
 
     @Test(expected = IllegalArgumentException.class)
     public void testFailsIfWrongMethodCalled() throws IOException {
-        setupMockFsService(MINIMAL_PROPERTIES);
-        PropertyService propertyService = new PropertyService(mockFsService);
+        PropertyService propertyService = initPropertyService(MINIMAL_PROPERTIES);
         propertyService.getString(Property.PROPERTIES_VERSION);
     }
 
     @Test
     public void testWritesChanges() throws IOException {
-        setupMockFsService(MINIMAL_PROPERTIES);
-        PropertyService propertyService = new PropertyService(mockFsService);
+        PropertyService propertyService = initPropertyService(MINIMAL_PROPERTIES);
         propertyService.setInteger(Property.PROPERTIES_VERSION, 42);
         propertyService.saveProperties();
         String output = mockWriter.toString();
         assertTrue(output.contains("properties.version=42"));
     }
 
+    @Test
+    public void testReturnsConfigDirLocation() throws IOException {
+        PropertyService propertyService = initPropertyService(MINIMAL_PROPERTIES);
+        assertEquals(FAKE_CONFIGDIR_LOCATION, propertyService.getConfigDirLocation());
+    }
+
+    private PropertyService initPropertyService(String propertyString) throws IOException {
+        setupMockFsService(propertyString);
+        return new PropertyService(mockFsService);
+    }
 }

@@ -16,8 +16,12 @@ import java.nio.file.StandardOpenOption;
 @ApplicationScoped
 public class FsService {
 
+    public boolean pathExists(Path path) {
+        return Files.exists(path);
+    }
+
     public void copyResourceIfFileAbsent(Path file, String resource) throws IOException {
-        if (Files.exists(file))
+        if (pathExists(file))
             return;
         try (InputStream defaultPropertiesInputStream = getClass().getResourceAsStream(resource);
              BufferedInputStream defaultPropertiesBufferedInputStream = new BufferedInputStream(defaultPropertiesInputStream)){
@@ -25,9 +29,15 @@ public class FsService {
         }
     }
 
-    public void readFile(Path file, IoConsumer<Reader> consumer) throws IOException {
+    public void consumeFile(Path file, IoConsumer<Reader> consumer) throws IOException {
         try (Reader reader = Files.newBufferedReader(file)) {
             consumer.accept(reader);
+        }
+    }
+
+    public <T> T readFile(Path file, ThrowingFunction<Reader, T> readingFunction) throws Exception {
+        try (Reader reader = Files.newBufferedReader(file)) {
+            return readingFunction.apply(reader);
         }
     }
 

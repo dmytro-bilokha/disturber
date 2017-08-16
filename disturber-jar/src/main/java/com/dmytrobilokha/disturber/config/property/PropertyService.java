@@ -36,7 +36,7 @@ public class PropertyService {
     @Inject
     public PropertyService(FsService fsService) {
         this.fsService = fsService;
-        String configDirLocation = System.getProperty(Constants.CONFIG_DIR_PROPERTY_KEY);
+        String configDirLocation = getConfigDirLocation();
         if (configDirLocation == null)
             throw new IllegalStateException("Configuration directory is not defined");
         String configFileLocation = configDirLocation + Constants.FILE_SEPARATOR + Constants.PROPERTIES_FILE_NAME;
@@ -44,6 +44,10 @@ public class PropertyService {
         ensureConfigFileExists();
         Properties appProperties = loadPropertiesFile();
         propertyMap = parseProperties(appProperties);
+    }
+
+    public String getConfigDirLocation() {
+        return System.getProperty(Constants.CONFIG_DIR_PROPERTY_KEY);
     }
 
     private void ensureConfigFileExists() {
@@ -58,7 +62,7 @@ public class PropertyService {
     private Properties loadPropertiesFile() {
         Properties appProperties = new Properties();
         try {
-            fsService.readFile(configFilePath, appProperties::load);
+            fsService.consumeFile(configFilePath, appProperties::load);
         } catch (IOException | SecurityException ex) {
             throw new IllegalStateException("Unable to load application properties from file '"
                     + configFilePath + '\'', ex);
