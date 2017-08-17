@@ -63,7 +63,7 @@ public class PropertyService {
         Properties appProperties = new Properties();
         try {
             fsService.consumeFile(configFilePath, appProperties::load);
-        } catch (IOException | SecurityException ex) {
+        } catch (Exception ex) {
             throw new IllegalStateException("Unable to load application properties from file '"
                     + configFilePath + '\'', ex);
         }
@@ -146,8 +146,14 @@ public class PropertyService {
 
     public void saveProperties() throws IOException {
             Properties appProperties = propertyMapToProperties();
-            fsService.writeFile(configFilePath
-                    , writer -> appProperties.store(writer, "Properties updated at " + LocalDateTime.now()));
+            try {
+                fsService.writeFile(configFilePath
+                        , writer -> appProperties.store(writer, "Properties updated at " + LocalDateTime.now()));
+            } catch (IOException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                throw (RuntimeException) ex;
+            }
     }
 
     private Properties propertyMapToProperties() {

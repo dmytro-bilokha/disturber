@@ -29,7 +29,7 @@ public class FsService {
         }
     }
 
-    public void consumeFile(Path file, IoConsumer<Reader> consumer) throws IOException {
+    public void consumeFile(Path file, ThrowingConsumer<Reader> consumer) throws Exception {
         try (Reader reader = Files.newBufferedReader(file)) {
             consumer.accept(reader);
         }
@@ -41,7 +41,7 @@ public class FsService {
         }
     }
 
-    public void writeFile(Path file, IoConsumer<Writer> consumer) throws IOException {
+    public void writeFile(Path file, ThrowingConsumer<Writer> consumer) throws Exception {
         try (Writer writer = Files.newBufferedWriter(file
                 , StandardOpenOption.WRITE, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             consumer.accept(writer);

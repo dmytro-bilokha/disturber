@@ -5,7 +5,7 @@ import static com.dmytrobilokha.disturber.Constants.NEW_LINE;
 /**
  * Class with mock properties sets. It emulates the properties file on the filesystem
  */
-public class MockProperties {
+public final class MockProperty {
 
 
     public static final String MINIMAL_PROPERTIES = "network.sync.timeout=1" + NEW_LINE
@@ -19,7 +19,7 @@ public class MockProperties {
             + "network.sync.interval=2" + NEW_LINE
             + "properties.version=here we expect number";
 
-    private MockProperties() {
+    private MockProperty() {
         //No need to instantiate
     }
 }

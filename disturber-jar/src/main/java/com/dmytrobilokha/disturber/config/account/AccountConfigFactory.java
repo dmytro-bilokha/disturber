@@ -10,7 +10,9 @@ import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -57,18 +59,22 @@ public class AccountConfigFactory {
         try {
             accountsDto = unmarshalAccountsDto(accountsFilePath);
         } catch (JAXBException ex) {
-            LOG.error("Unable to read accounts from file '{}'", accountsFilePath, ex);
+            LOG.error("Unable to read accounts from file '{}'. Looks like file is broken", accountsFilePath, ex);
+            return Collections.emptyList(); //TODO implement some nice UI error message instead of doing this!
+        } catch (IOException ex) {
+            LOG.error("Unable to open and read accounts file '{}'. File read error", accountsFilePath, ex);
             return Collections.emptyList(); //TODO implement some nice UI error message instead of doing this!
         }
         return convertDtosToConfig(accountsDto.getAccounts());
     }
 
-    private AccountsDto unmarshalAccountsDto(Path accountsFilePath) throws JAXBException {
+    //TODO: introduce application-specific exception
+    private AccountsDto unmarshalAccountsDto(Path accountsFilePath) throws JAXBException, IOException {
         Unmarshaller unmarshaller = JAXBContext.newInstance(AccountsDto.class).createUnmarshaller();
         try {
             return fsService.readFile(accountsFilePath
                     , reader -> (AccountsDto) unmarshaller.unmarshal(reader));
-        } catch (JAXBException ex) {
+        } catch (JAXBException | IOException ex) {
             throw ex;
         } catch (Exception ex) {
             throw (RuntimeException) ex;
@@ -82,4 +88,19 @@ public class AccountConfigFactory {
     private AccountConfig mapDtoToConfig(AccountConfigDto configDto) {
         return new AccountConfig(configDto.getServerAddress(), configDto.getLogin(), configDto.getPassword());
     }
+
+    //TODO: introduce application-specific exceptions
+    public void saveAccountConfigs(AccountsDto accountsDto) throws JAXBException, IOException {
+        Marshaller marshaller = JAXBContext.newInstance(AccountsDto.class).createMarshaller();
+        marshaller.setProperty("jaxb.formatted.output", Boolean.TRUE);
+        try {
+            fsService.writeFile(accountsFilePath
+                    , writer -> marshaller.marshal(accountsDto, writer));
+        } catch (JAXBException | IOException ex) {
+            throw ex;
+        } catch (Exception ex) {
+            throw (RuntimeException) ex;
+        }
+    }
+
 }
