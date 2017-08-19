@@ -33,4 +33,11 @@ public class AccountsDto {
         this.accounts = accounts;
     }
 
+    @Override
+    public String toString() {
+        return "AccountsDto{" +
+                "version=" + version +
+                ", accounts=" + accounts +
+                '}';
+    }
 }

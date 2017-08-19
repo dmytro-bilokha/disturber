@@ -7,8 +7,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import javax.xml.bind.JAXBException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,7 +23,7 @@ public class AccountConfigFactoryTest {
     private AccountConfigFactory accountConfigFactory;
 
     @Before
-    public void init() throws IOException {
+    public void init() {
         mockFsService = Mockito.mock(FsService.class);
         when(mockFsService.pathExists(any())).thenReturn(true);
         mockPropertyService = Mockito.mock(PropertyService.class);
@@ -34,14 +32,14 @@ public class AccountConfigFactoryTest {
     }
 
     @Test
-    public void testReturnsEmptyListIfAccountsFileNotFound() {
+    public void testReturnsEmptyListIfAccountsFileNotFound() throws AccountConfigAccessException {
         when(mockFsService.pathExists(any())).thenReturn(false);
         assertEquals(0, accountConfigFactory.getAccountConfigs().size());
     }
 
     @Ignore("This is a bootstrap test developed to create a basic accounts.xml file")
     @Test
-    public void testSavesRealAccountConfigsFile() throws JAXBException, IOException {
+    public void testSavesRealAccountConfigsFile() throws AccountConfigAccessException {
         when(mockPropertyService.getConfigDirLocation()).thenReturn("/usr/home/dimon/temp");
         AccountConfigFactory realAccountConfigFactory = new AccountConfigFactory(mockPropertyService, new FsService());
         AccountsDto accountsDto = new AccountsDto();

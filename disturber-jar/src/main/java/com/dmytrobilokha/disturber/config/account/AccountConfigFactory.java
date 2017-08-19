@@ -1,6 +1,7 @@
 package com.dmytrobilokha.disturber.config.account;
 
 import com.dmytrobilokha.disturber.Constants;
+import com.dmytrobilokha.disturber.SystemMessage;
 import com.dmytrobilokha.disturber.config.property.PropertyService;
 import com.dmytrobilokha.disturber.service.fs.FsService;
 import org.slf4j.Logger;
@@ -46,38 +47,36 @@ public class AccountConfigFactory {
         accountsFilePath = Paths.get(propertyService.getConfigDirLocation() + Constants.FILE_SEPARATOR + ACCOUNTS_FILE_NAME);
     }
 
-    public List<AccountConfig> getAccountConfigs() {
+    public List<AccountConfig> getAccountConfigs() throws AccountConfigAccessException {
         if (accountConfigs == null)
             accountConfigs = loadAccountConfigs();
         return Collections.unmodifiableList(accountConfigs);
     }
 
-    private List<AccountConfig> loadAccountConfigs() {
+    private List<AccountConfig> loadAccountConfigs() throws AccountConfigAccessException {
         if (!fsService.pathExists(accountsFilePath))
             return new ArrayList<>();
-        AccountsDto accountsDto;
-        try {
-            accountsDto = unmarshalAccountsDto(accountsFilePath);
-        } catch (JAXBException ex) {
-            LOG.error("Unable to read accounts from file '{}'. Looks like file is broken", accountsFilePath, ex);
-            return Collections.emptyList(); //TODO implement some nice UI error message instead of doing this!
-        } catch (IOException ex) {
-            LOG.error("Unable to open and read accounts file '{}'. File read error", accountsFilePath, ex);
-            return Collections.emptyList(); //TODO implement some nice UI error message instead of doing this!
-        }
+        AccountsDto accountsDto = unmarshalAccountsDto(accountsFilePath);
         return convertDtosToConfig(accountsDto.getAccounts());
     }
 
-    //TODO: introduce application-specific exception
-    private AccountsDto unmarshalAccountsDto(Path accountsFilePath) throws JAXBException, IOException {
-        Unmarshaller unmarshaller = JAXBContext.newInstance(AccountsDto.class).createUnmarshaller();
+    private AccountsDto unmarshalAccountsDto(Path accountsFilePath) throws AccountConfigAccessException {
         try {
+            Unmarshaller unmarshaller = JAXBContext.newInstance(AccountsDto.class).createUnmarshaller();
             return fsService.readFile(accountsFilePath
                     , reader -> (AccountsDto) unmarshaller.unmarshal(reader));
-        } catch (JAXBException | IOException ex) {
-            throw ex;
+        } catch (IOException ex) {
+            LOG.error("Unable to open and read accounts file '{}'", accountsFilePath, ex);
+            throw new AccountConfigAccessException(
+                    new SystemMessage("account.config.load.exception.io", accountsFilePath), ex);
+        } catch (JAXBException ex) {
+            LOG.error("Failed to unmarshal accounts xml file '{}'", accountsFilePath, ex);
+            throw new AccountConfigAccessException(
+                    new SystemMessage("account.config.load.exception.xml", accountsFilePath), ex);
         } catch (Exception ex) {
-            throw (RuntimeException) ex;
+            LOG.error("Unexpected exception during reading accounts file {}", accountsFilePath, ex);
+            throw new AccountConfigAccessException(
+                    new SystemMessage("account.config.load.exception.unexpected", accountsFilePath), ex);
         }
     }
 
@@ -89,17 +88,24 @@ public class AccountConfigFactory {
         return new AccountConfig(configDto.getServerAddress(), configDto.getLogin(), configDto.getPassword());
     }
 
-    //TODO: introduce application-specific exceptions
-    public void saveAccountConfigs(AccountsDto accountsDto) throws JAXBException, IOException {
-        Marshaller marshaller = JAXBContext.newInstance(AccountsDto.class).createMarshaller();
-        marshaller.setProperty("jaxb.formatted.output", Boolean.TRUE);
+    public void saveAccountConfigs(AccountsDto accountsDto) throws AccountConfigAccessException {
         try {
+            Marshaller marshaller = JAXBContext.newInstance(AccountsDto.class).createMarshaller();
+            marshaller.setProperty("jaxb.formatted.output", Boolean.TRUE);
             fsService.writeFile(accountsFilePath
                     , writer -> marshaller.marshal(accountsDto, writer));
-        } catch (JAXBException | IOException ex) {
-            throw ex;
+        } catch (IOException ex) {
+            LOG.error("Failed to save {} to file {}", accountsDto, accountsFilePath, ex);
+            throw new AccountConfigAccessException(
+                    new SystemMessage("account.config.save.exception.io", accountsFilePath), ex);
+        } catch (JAXBException ex) {
+            LOG.error("XML marshalling exception during saving {} to file {}", accountsDto, accountsFilePath, ex);
+            throw new AccountConfigAccessException(
+                    new SystemMessage("account.config.save.exception.xml", accountsFilePath), ex);
         } catch (Exception ex) {
-            throw (RuntimeException) ex;
+            LOG.error("Unexpected exception during saving {} to file {}", accountsDto, accountsFilePath, ex);
+            throw new AccountConfigAccessException(
+                    new SystemMessage("account.config.save.exception.unexpected", accountsFilePath), ex);
         }
     }
 
