@@ -50,15 +50,15 @@ public class PropertyServiceTest {
         doAnswer(invocation -> {
                 Reader reader = new StringReader(dataToRead);
                 ((ThrowingConsumer<Reader>)invocation.getArguments()[1]).accept(reader);
+                reader.close();
                 return null;
-            })
-            .when(mockFsService).consumeFile(any(), any(ThrowingConsumer.class));
+            }).when(mockFsService).consumeFile(any(), any(ThrowingConsumer.class));
         mockWriter = new StringWriter(1000);
         doAnswer(invocation -> {
             ((ThrowingConsumer<Writer>)invocation.getArguments()[1]).accept(mockWriter);
+            mockWriter.close();
             return null;
-            })
-            .when(mockFsService).writeFile(any(), any(ThrowingConsumer.class));
+            }).when(mockFsService).writeFile(any(), any(ThrowingConsumer.class));
     }
 
     @Test(expected = IllegalStateException.class)

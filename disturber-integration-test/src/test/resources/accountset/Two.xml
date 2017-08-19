@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<accounts>
+    <version>1</version>
+    <account>
+        <serverAddress>address11</serverAddress>
+        <login>login12</login>
+        <password>password13</password>
+    </account>
+    <account>
+        <serverAddress>address21</serverAddress>
+        <login>login22</login>
+        <password>password23</password>
+    </account>
+</accounts>

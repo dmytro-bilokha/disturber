@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<accounts>
+    <version>1</version>
+    <account>
+        <serverAddress>address1</serverAddress>
+        <login>login2</login>
+        <password>password3</password>
+    </account>
+</accounts>
