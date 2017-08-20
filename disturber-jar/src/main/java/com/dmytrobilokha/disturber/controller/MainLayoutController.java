@@ -1,6 +1,6 @@
 package com.dmytrobilokha.disturber.controller;
 
-import com.dmytrobilokha.disturber.service.network.MatrixClientService;
+import com.dmytrobilokha.disturber.network.MatrixClientService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;

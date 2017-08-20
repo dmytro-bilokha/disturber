@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.service.network;
+package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.model.network.MessageDto;
 import com.dmytrobilokha.disturber.config.connection.NetworkConnectionConfig;

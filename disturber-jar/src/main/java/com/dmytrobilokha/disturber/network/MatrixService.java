@@ -1,6 +1,7 @@
-package com.dmytrobilokha.disturber.service.network;
+package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.model.network.MessageDto;
+import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
 import retrofit2.Call;
 import retrofit2.http.GET;
 
@@ -11,5 +12,8 @@ interface MatrixService {
 
     @GET("random")
     Call<MessageDto> getQuote();
+
+    @GET("_matrix/client/r0/sync")
+    Call<SyncResponseDto> sync();
 
 }

@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.service.network;
+package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.config.connection.NetworkConnectionConfig;
 import javafx.collections.ObservableList;
