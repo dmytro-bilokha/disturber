@@ -1,6 +1,5 @@
 package com.dmytrobilokha.disturber.network.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
@@ -10,7 +9,7 @@ import java.util.List;
 /**
  * The class represents event content DTO
  */
-@JsonIgnoreProperties(value = {"tags", "device", "global"}) //TODO: implement tags mapping and remove this
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EventContentDto {
 
     @JsonProperty(value = "membership", required = false)
@@ -83,4 +82,6 @@ public class EventContentDto {
     public void setUserIds(List<String> userIds) {
         this.userIds = userIds;
     }
+
+
 }

@@ -1,6 +1,7 @@
 package com.dmytrobilokha.disturber.network;
 
-import com.dmytrobilokha.disturber.Constants;
+import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
+import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
 import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
 import okhttp3.OkHttpClient;
 import org.junit.AfterClass;
@@ -22,8 +23,10 @@ import java.util.concurrent.TimeUnit;
 /**
  * The class to test synchronization with a matrix server
  */
+@Ignore
 public class SynchronizationTest {
 
+    //TODO: implement randomizing port number + few retries
     private static final String baseUrl = "http://localhost:64444/";
     private static final String endpointPath = "_matrix/client/r0/sync";
 
@@ -32,7 +35,7 @@ public class SynchronizationTest {
     @BeforeClass
     public static void setupServer() throws Exception {
         httpServerMock = new HttpServerMock("/", 64444);
-        httpServerMock.addUriMock(new URI("/" + endpointPath), "/jsonset/syncReal.json");
+        httpServerMock.addUriMock(new URI("/" + endpointPath), "/jsonset/sync.json");
         httpServerMock.start();
     }
 
@@ -52,6 +55,7 @@ public class SynchronizationTest {
         reader.lines().forEach(line -> System.out.println(line));
     }
 
+    @Ignore
     @Test
     public void testDeserializesJsonInput() throws IOException {
         Retrofit retrofit = new Retrofit.Builder()
@@ -60,7 +64,23 @@ public class SynchronizationTest {
                 .client(getConfiguredHttpClient())
                 .build();
         MatrixService matrixService = retrofit.create(MatrixService.class);
-        Response<SyncResponseDto> response = matrixService.sync().execute();
+        //Response<SyncResponseDto> response = matrixService.sync().execute();
+        //System.out.println(response.body());
+    }
+
+    //TODO: integrate this stuff into main code and change this test
+    @Test
+    public void testLogsIn() throws IOException {
+        LoginPasswordDto loginPassword = new LoginPasswordDto();
+        loginPassword.setLogin("login");
+        loginPassword.setPassword("pass");
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://matrix.org/")
+                .addConverterFactory(JacksonConverterFactory.create())
+                .client(getConfiguredHttpClient())
+                .build();
+        MatrixService matrixService = retrofit.create(MatrixService.class);
+        Response<LoginAnswerDto> response = matrixService.login(loginPassword).execute();
         System.out.println(response.body());
     }
 

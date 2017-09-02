@@ -1,22 +1,17 @@
 package com.dmytrobilokha.disturber.network.dto;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
-import java.util.List;
-import java.util.Map;
 
 /**
  * The matrix event DTO class
  */
-@JsonIgnoreProperties(value = {"content", "prev_content"})
 public class EventDto {
 
-/*    @JsonProperty(value = "content", required = true)
+    @JsonProperty(value = "content", required = true)
     private EventContentDto content;
-    @JsonProperty(value = "prev_content", required = true)
+    @JsonProperty(value = "prev_content", required = false)
     private EventContentDto previousContent;    //TODO: investigate why in the sync response example this is present, but in
-                                                //the documentation (6.2.1) -- no???*/
+                                                //the documentation (6.2.1) -- no???
     @JsonProperty(value = "origin_server_ts", required = true)
     private Long serverTimestamp;
     @JsonProperty(value = "sender", required = true)
@@ -111,5 +106,21 @@ public class EventDto {
 
     public void setMembership(String membership) {
         this.membership = membership;
+    }
+
+    public EventContentDto getContent() {
+        return content;
+    }
+
+    public void setContent(EventContentDto content) {
+        this.content = content;
+    }
+
+    public EventContentDto getPreviousContent() {
+        return previousContent;
+    }
+
+    public void setPreviousContent(EventContentDto previousContent) {
+        this.previousContent = previousContent;
     }
 }

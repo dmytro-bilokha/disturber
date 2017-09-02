@@ -1,6 +1,7 @@
 package com.dmytrobilokha.disturber.network;
 
 
+import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.connection.NetworkConnectionConfigFactory;
 import javafx.collections.ObservableList;
 
@@ -24,9 +25,9 @@ public class MatrixClientService {
         this.networkConnectionConfigFactory = networkConnectionConfigFactory;
     }
 
-    public void connect(ObservableList<String> messageList, String baseUrl) {
-        new SynchronizeMessageService(messageList, baseUrl
-                , networkConnectionConfigFactory.getNetworkConnectionConfig()).start();
+    public void connect(ObservableList<String> messageList, AccountConfig accountConfig) {
+        MatrixAccount account = new MatrixAccount(accountConfig, networkConnectionConfigFactory.getNetworkConnectionConfig());
+        new SynchronizeMessageService(messageList, account).start();
     }
 
 }
