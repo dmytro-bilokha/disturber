@@ -6,12 +6,13 @@ import com.dmytrobilokha.disturber.network.dto.JoinedRoomDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
 import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
-import com.dmytrobilokha.disturber.network.dto.TimelineDto;
 import javafx.concurrent.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,10 +25,13 @@ import java.util.function.Function;
 class MatrixClient extends Task<Void> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixClient.class);
+    private static final String SYSTEM = "SYSTEM";
+    private static final String TEXT_CONTENT = "m.text";
 
     private final AccountConfig accountConfig;
     private final MatrixEventQueue eventQueue;
     private final MatrixApiConnector apiConnector;
+    private final MatrixEvent.Builder eventBuilder;
 
     private State state = State.NOT_CONNECTED;
     private String accessToken;
@@ -40,6 +44,7 @@ class MatrixClient extends Task<Void> {
         this.accountConfig = accountConfig;
         this.eventQueue = eventQueue;
         this.apiConnector = apiConnector;
+        this.eventBuilder = MatrixEvent.newBuilder();
     }
 
     @Override
@@ -83,29 +88,44 @@ class MatrixClient extends Task<Void> {
             answerDto = apiConnector.issueRequest(matrixService -> matrixService.login(loginPasswordDto));
         } catch (ApiConnectException ex) {
             LOG.error("Failed to login with {}", accountConfig, ex);
-            addMessage("Failed to login, because of input/output error");
+            sendSystemMessage("Failed to login, because of input/output error");
             return;
         } catch (ApiRequestException ex) {
             LOG.error("Failed to login with {}, got {}", accountConfig, ex.getApiError(), ex);
-            addMessage("Failed to log in with " + ex.getApiError());
+            sendSystemMessage("Failed to log in with " + ex.getApiError());
             return;
         }
         accessToken = answerDto.getAccessToken();
         homeServer = answerDto.getHomeServer();
         userId = answerDto.getUserId();
         state = State.LOGGEDIN;
-        addMessage("Successfully logged in. Token=" + accessToken);
+        sendSystemMessage("Successfully logged in. Token=" + accessToken);
     }
 
-    private void addMessage(String message) {
-        eventQueue.addEvent(message);
+    private void sendSystemMessage(String message) {
+        eventQueue.addEvent(eventBuilder
+                .userId(userId == null ? buildUserId() : userId)
+                .roomId(SYSTEM)
+                .sender(SYSTEM)
+                .contentType(TEXT_CONTENT)
+                .content(message)
+                .build());
         haveNewEvents = true;
     }
 
-    private void addMessages(Collection<String> messages) {
-        if (messages.isEmpty())
+    private String buildUserId() {
+        try {
+            return '@' + accountConfig.getLogin() + ':' + new URL(accountConfig.getServerAddress()).getHost();
+        } catch (MalformedURLException ex) {
+            LOG.error("{} contains invalid server URL", accountConfig.getServerAddress(), ex);
+            return '@' + accountConfig.getLogin() + ':' + accountConfig.getServerAddress();
+        }
+    }
+
+    private void addEventsToQueue(Collection<MatrixEvent> events) {
+        if (events.isEmpty())
             return;
-        eventQueue.addEvents(messages);
+        eventQueue.addEvents(events);
         haveNewEvents = true;
     }
 
@@ -125,30 +145,33 @@ class MatrixClient extends Task<Void> {
             syncResponseDto = apiConnector.issueRequest(requestFunction);
         } catch (ApiConnectException ex) {
             LOG.error("Failed to synchronize {} with server because of input/output error", accountConfig, ex);
-            addMessage("Failed to sync because of IOException");
+            sendSystemMessage("Failed to sync because of IOException");
             return false;
         } catch (ApiRequestException ex) {
             LOG.error("Failed to synchronize {} with server, got {}", accountConfig, ex.getApiError(), ex);
-            addMessage("Failed to sync with " + ex.getApiError());
+            sendSystemMessage("Failed to sync with " + ex.getApiError());
             return false;
         }
         nextBatchId = syncResponseDto.getNextBatch();
-        List<String> newMessages = extractNewMessages(syncResponseDto);
-        addMessages(newMessages);
+        List<MatrixEvent> events = extractEvents(syncResponseDto);
+        addEventsToQueue(events);
         return true;
     }
 
-    private List<String> extractNewMessages(SyncResponseDto syncResponseDto) {
+    private List<MatrixEvent> extractEvents(SyncResponseDto syncResponseDto) {
         Map<String, JoinedRoomDto> joinedRoomMap = syncResponseDto.getRooms().getJoinedRoomMap();
-        List<String> messagesList = new ArrayList<>();
-        for (JoinedRoomDto joinedRoomDto : joinedRoomMap.values()) {
-            TimelineDto timelineDto = joinedRoomDto.getTimeline();
-            List<EventDto> eventDtos = timelineDto.getEvents();
-            eventDtos.stream()
-                    .map(EventDto::getContent)
-                    .filter(content -> content.getBody() != null)
-                    .map(content -> "type:" + content.getMsgType() + " body:" + content.getBody())
-                    .forEach(messagesList::add);
+        List<MatrixEvent> messagesList = new ArrayList<>();
+        eventBuilder.userId(userId);
+        for (Map.Entry<String, JoinedRoomDto> joinedRoomDtoEntry : joinedRoomMap.entrySet()) {
+            eventBuilder.roomId(joinedRoomDtoEntry.getKey());
+            List<EventDto> eventDtos = joinedRoomDtoEntry.getValue().getTimeline().getEvents();
+            for (EventDto eventDto : eventDtos) {
+                messagesList.add(eventBuilder.serverTimestamp(eventDto.getServerTimestamp())
+                            .sender(eventDto.getSender())
+                            .contentType(eventDto.getContent().getMsgType())
+                            .content(eventDto.getContent().getBody())
+                            .build());
+            }
         }
         return messagesList;
     }

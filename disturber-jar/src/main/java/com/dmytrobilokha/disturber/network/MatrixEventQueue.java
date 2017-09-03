@@ -7,9 +7,9 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * The class represents container for events queue. It is accessed from worker threads and from the FX application thread
  */
-public class MatrixEventQueue {
+public final class MatrixEventQueue {
 
-    private final Queue<String> eventQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<MatrixEvent> eventQueue = new ConcurrentLinkedQueue<>();
     private final Runnable newEventCallback;
 
     MatrixEventQueue(Runnable newEventCallback) {
@@ -20,15 +20,15 @@ public class MatrixEventQueue {
         newEventCallback.run();
     }
 
-    void addEvent(String event) {
+    void addEvent(MatrixEvent event) {
         eventQueue.add(event);
     }
 
-    void addEvents(Collection<String> events) {
+    void addEvents(Collection<MatrixEvent> events) {
         eventQueue.addAll(events);
     }
 
-    String pollEvent() {
+    MatrixEvent pollEvent() {
         return eventQueue.poll();
     }
 

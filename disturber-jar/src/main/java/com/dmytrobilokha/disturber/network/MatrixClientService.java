@@ -29,9 +29,9 @@ public class MatrixClientService {
     }
 
     private void eventCallback() {
-        String message;
-        while ((message = eventQueue.pollEvent()) != null) {
-            messageList.add(message);
+        MatrixEvent event;
+        while ((event = eventQueue.pollEvent()) != null) {
+            messageList.add(event.toString());
         }
     }
 
