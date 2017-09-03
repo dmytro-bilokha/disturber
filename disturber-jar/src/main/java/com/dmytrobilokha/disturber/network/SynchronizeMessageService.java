@@ -19,7 +19,8 @@ public class SynchronizeMessageService extends Service<Void> {
 
     @Override
     protected Task<Void> createTask() {
-        return new SynchronizeMessageTask(messageList, matrixAccount);
+        return new MatrixClient(messageList, matrixAccount
+                , new MatrixApiConnector(matrixAccount.getNetworkConnectionConfig()));
     }
 
 }

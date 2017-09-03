@@ -1,9 +1,11 @@
 package com.dmytrobilokha.disturber.network;
 
+import java.io.Serializable;
+
 /**
  * The class represents error in communication with the Matrix server
  */
-public class ApiError {
+public class ApiError implements Serializable {
 
     private final int networkCode;
     private final String errorCode;
