@@ -19,9 +19,9 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * Created by dimon on 13.08.17.
+ * The class represents Matrix client. It contains logic to do login, synchronization, etc.
  */
-public class MatrixClient extends Task<Void> {
+class MatrixClient extends Task<Void> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixClient.class);
 
@@ -153,7 +153,7 @@ public class MatrixClient extends Task<Void> {
         return messagesList;
     }
 
-    public enum State {
+    private enum State {
         NOT_CONNECTED, CONNECTED, LOGGEDIN, INITIAL_SYNCED;
     }
 

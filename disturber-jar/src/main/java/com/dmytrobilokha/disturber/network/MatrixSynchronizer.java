@@ -5,14 +5,14 @@ import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
 /**
- * Created by dimon on 13.08.17.
+ * The class represents synchronizer which goal is to run Matrix Client
  */
-public class SynchronizeMessageService extends Service<Void> {
+public class MatrixSynchronizer extends Service<Void> {
 
     private final AccountConfig accountConfig;
     private final MatrixEventQueue eventQueue;
 
-    SynchronizeMessageService(AccountConfig accountConfig, MatrixEventQueue eventQueue) {
+    MatrixSynchronizer(AccountConfig accountConfig, MatrixEventQueue eventQueue) {
         this.accountConfig = accountConfig;
         this.eventQueue = eventQueue;
     }

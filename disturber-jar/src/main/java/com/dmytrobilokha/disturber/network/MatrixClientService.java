@@ -9,7 +9,8 @@ import javafx.collections.ObservableList;
 import javax.enterprise.context.ApplicationScoped;
 
 /**
- * Created by dimon on 13.08.17.
+ * The service responsible for keeping in sync with Matrix accounts. It aggregates UI-related stuff with
+ * Matrix API stuff.
  */
 @ApplicationScoped
 public class MatrixClientService {
@@ -23,7 +24,7 @@ public class MatrixClientService {
     }
 
     public ObservableList<String> connect(AccountConfig accountConfig) {
-        new SynchronizeMessageService(accountConfig, eventQueue).start();
+        new MatrixSynchronizer(accountConfig, eventQueue).start();
         return messageList;
     }
 

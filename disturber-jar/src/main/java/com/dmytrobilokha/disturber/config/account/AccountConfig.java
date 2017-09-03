@@ -52,17 +52,21 @@ public class AccountConfig {
         return "AccountConfig{" +
                 "serverAddress='" + serverAddress + '\'' +
                 ", login='" + login + '\'' +
+                ", betweenSyncPause=" + betweenSyncPause +
+                ", syncTimeout=" + syncTimeout +
+                ", networkTimeout=" + networkTimeout +
                 '}';
     }
 
     @Override
     public boolean equals(Object o) {
-        if (this == o)
-            return true;
-        if (o == null || getClass() != o.getClass())
-            return false;
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         AccountConfig that = (AccountConfig) o;
-        return Objects.equals(serverAddress, that.serverAddress) &&
+        return betweenSyncPause == that.betweenSyncPause &&
+                syncTimeout == that.syncTimeout &&
+                networkTimeout == that.networkTimeout &&
+                Objects.equals(serverAddress, that.serverAddress) &&
                 Objects.equals(login, that.login) &&
                 Objects.equals(password, that.password);
     }
@@ -71,5 +75,4 @@ public class AccountConfig {
     public int hashCode() {
         return Objects.hash(serverAddress, login);
     }
-
 }

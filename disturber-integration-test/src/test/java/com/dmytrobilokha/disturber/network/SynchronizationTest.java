@@ -2,7 +2,6 @@ package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
-import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
 import okhttp3.OkHttpClient;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;

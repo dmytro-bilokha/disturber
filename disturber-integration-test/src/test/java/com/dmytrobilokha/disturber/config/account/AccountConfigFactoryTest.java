@@ -5,6 +5,7 @@ import com.dmytrobilokha.disturber.service.fs.FsService;
 import com.dmytrobilokha.disturber.service.fs.ThrowingConsumer;
 import com.dmytrobilokha.disturber.service.fs.ThrowingFunction;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.mockito.Mockito;
 
@@ -65,9 +66,7 @@ public class AccountConfigFactoryTest {
         List<AccountConfig> configs = accountConfigFactory.getAccountConfigs();
         assertEquals(1, configs.size());
         AccountConfig config = configs.get(0);
-        assertEquals("address1", config.getServerAddress());
-        assertEquals("login2", config.getLogin());
-        assertEquals("password3", config.getPassword());
+        assertEquals(new AccountConfig("address1", "login2", "password3", 1, 2, 3), config);
     }
 
     @Test
@@ -75,8 +74,8 @@ public class AccountConfigFactoryTest {
         setupFsServiceMockReader("Two.xml");
         List<AccountConfig> configs = accountConfigFactory.getAccountConfigs();
         assertEquals(2, configs.size());
-        assertEquals(new AccountConfig("address11", "login12", "password13"), configs.get(0));
-        assertEquals(new AccountConfig("address21", "login22", "password23"), configs.get(1));
+        assertEquals(new AccountConfig("address11", "login12", "password13", 1, 2, 3), configs.get(0));
+        assertEquals(new AccountConfig("address21", "login22", "password23", 4, 5, 6), configs.get(1));
     }
 
     private void setupFsServiceMockReader(String resourceLocation) throws Exception {
@@ -104,6 +103,14 @@ public class AccountConfigFactoryTest {
         assertTrue(savedXml.contains("<serverAddress>address1x</serverAddress>"));
         assertTrue(savedXml.contains("<login>login2x</login>"));
         assertTrue(savedXml.contains("<password>password3x</password>"));
+        assertTrue(savedXml.contains("<betweenSyncPause>0</betweenSyncPause>"));
+    }
+
+    @Ignore //TODO: implement accounts.xml validation against XSD for the test to pass
+    @Test(expected = AccountConfigAccessException.class)
+    public void testFailsOnInvalidXml() throws Exception {
+        setupFsServiceMockReader("Invalid.xml");
+        List<AccountConfig> configs = accountConfigFactory.getAccountConfigs();
     }
 
     @Test(expected = AccountConfigAccessException.class)

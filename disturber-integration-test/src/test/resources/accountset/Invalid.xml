@@ -6,7 +6,7 @@
         <login>login2</login>
         <password>password3</password>
         <betweenSyncPause>1</betweenSyncPause>
-        <syncTimeout>2</syncTimeout>
+        <syncTimeout>here should be number</syncTimeout>
         <networkTimeout>3</networkTimeout>
     </account>
 </accounts>
