@@ -10,11 +10,17 @@ public class AccountConfig {
     private final String serverAddress;
     private final String login;
     private final String password;
+    private final int betweenSyncPause;
+    private final int syncTimeout;
+    private final int networkTimeout;
 
-    AccountConfig(String serverAddress, String login, String password) {
+    AccountConfig(String serverAddress, String login, String password, int betweenSyncPause, int syncTimeout, int networkTimeout) {
         this.serverAddress = serverAddress;
         this.login = login;
         this.password = password;
+        this.betweenSyncPause = betweenSyncPause;
+        this.syncTimeout = syncTimeout;
+        this.networkTimeout = networkTimeout;
     }
 
     public String getServerAddress() {
@@ -27,6 +33,18 @@ public class AccountConfig {
 
     public String getPassword() {
         return password;
+    }
+
+    public int getBetweenSyncPause() {
+        return betweenSyncPause;
+    }
+
+    public int getSyncTimeout() {
+        return syncTimeout;
+    }
+
+    public int getNetworkTimeout() {
+        return networkTimeout;
     }
 
     @Override

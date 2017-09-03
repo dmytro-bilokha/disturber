@@ -15,6 +15,9 @@ public class AccountConfigDto {
     private String serverAddress;
     private String login;
     private String password;
+    private int betweenSyncPause;
+    private int syncTimeout;
+    private int networkTimeout;
 
     public String getServerAddress() {
         return serverAddress;
@@ -40,6 +43,30 @@ public class AccountConfigDto {
         this.password = password;
     }
 
+    public int getBetweenSyncPause() {
+        return betweenSyncPause;
+    }
+
+    public void setBetweenSyncPause(int betweenSyncPause) {
+        this.betweenSyncPause = betweenSyncPause;
+    }
+
+    public int getSyncTimeout() {
+        return syncTimeout;
+    }
+
+    public void setSyncTimeout(int syncTimeout) {
+        this.syncTimeout = syncTimeout;
+    }
+
+    public int getNetworkTimeout() {
+        return networkTimeout;
+    }
+
+    public void setNetworkTimeout(int networkTimeout) {
+        this.networkTimeout = networkTimeout;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -60,7 +87,9 @@ public class AccountConfigDto {
         return "AccountConfigDto{" +
                 "serverAddress='" + serverAddress + '\'' +
                 ", login='" + login + '\'' +
+                ", betweenSyncPause=" + betweenSyncPause +
+                ", syncTimeout=" + syncTimeout +
+                ", networkTimeout=" + networkTimeout +
                 '}';
     }
-
 }

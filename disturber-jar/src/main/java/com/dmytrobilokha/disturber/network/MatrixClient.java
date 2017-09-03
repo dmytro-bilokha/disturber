@@ -1,18 +1,19 @@
 package com.dmytrobilokha.disturber.network;
 
+import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.network.dto.EventDto;
 import com.dmytrobilokha.disturber.network.dto.JoinedRoomDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
 import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
 import com.dmytrobilokha.disturber.network.dto.TimelineDto;
-import javafx.application.Platform;
 import javafx.concurrent.Task;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -24,23 +25,27 @@ public class MatrixClient extends Task<Void> {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixClient.class);
 
-    //This list is bound to UI and should be accessed only from the FX application thread
-    private final List<String> messageList;
-
-    private final MatrixAccount matrixAccount;
+    private final AccountConfig accountConfig;
+    private final MatrixEventQueue eventQueue;
     private final MatrixApiConnector apiConnector;
 
+    private State state = State.NOT_CONNECTED;
+    private String accessToken;
+    private String homeServer;
+    private String userId;
+    private String nextBatchId;
+    private boolean haveNewEvents;
 
-    MatrixClient(List<String> messageList, MatrixAccount matrixAccount, MatrixApiConnector apiConnector) {
-        this.messageList = messageList;
-        this.matrixAccount = matrixAccount;
+    MatrixClient(AccountConfig accountConfig, MatrixEventQueue eventQueue, MatrixApiConnector apiConnector) {
+        this.accountConfig = accountConfig;
+        this.eventQueue = eventQueue;
         this.apiConnector = apiConnector;
     }
 
     @Override
     protected Void call() throws Exception {
         while (!isCancelled()) {
-            switch (matrixAccount.getState()) {
+            switch (state) {
                 case NOT_CONNECTED:
                     connect();
                     break;
@@ -57,57 +62,61 @@ public class MatrixClient extends Task<Void> {
                     stepSync();
                     break;
             }
-            Platform.runLater(this::updateUiMessageList);
-            Thread.sleep(matrixAccount.getNetworkConnectionConfig().getConnectionInterval());
+            if (haveNewEvents)
+                eventQueue.triggerEventCallback();
+            Thread.sleep(accountConfig.getBetweenSyncPause());
         }
         return null;
     }
 
-    //The method to update FX message list, should be called only from FX application thread
-    private void updateUiMessageList() {
-        String message;
-        while ((message = matrixAccount.pollMessage()) != null) {
-           messageList.add(message);
-        }
-    }
-
     private void connect() {
-        String baseUrl = matrixAccount.getAccountConfig().getServerAddress();
-        apiConnector.createConnection(baseUrl);
-        matrixAccount.setState(MatrixAccount.State.CONNECTED);
+        apiConnector.createConnection(accountConfig.getServerAddress(), accountConfig.getNetworkTimeout());
+        state = State.CONNECTED;
     }
 
     private void login() {
         LoginPasswordDto loginPasswordDto = new LoginPasswordDto();
-        loginPasswordDto.setLogin(matrixAccount.getAccountConfig().getLogin());
-        loginPasswordDto.setPassword(matrixAccount.getAccountConfig().getPassword());
+        loginPasswordDto.setLogin(accountConfig.getLogin());
+        loginPasswordDto.setPassword(accountConfig.getPassword());
         LoginAnswerDto answerDto;
         try {
             answerDto = apiConnector.issueRequest(matrixService -> matrixService.login(loginPasswordDto));
         } catch (ApiConnectException ex) {
-            LOG.error("Failed to login with {}", matrixAccount.getAccountConfig(), ex);
-            matrixAccount.addMessage("Failed to login, because of input/output error");
+            LOG.error("Failed to login with {}", accountConfig, ex);
+            addMessage("Failed to login, because of input/output error");
             return;
         } catch (ApiRequestException ex) {
-            LOG.error("Failed to login with {}, got {}", matrixAccount.getAccountConfig(), ex.getApiError(), ex);
-            matrixAccount.addMessage("Failed to log in with " + ex.getApiError());
+            LOG.error("Failed to login with {}, got {}", accountConfig, ex.getApiError(), ex);
+            addMessage("Failed to log in with " + ex.getApiError());
             return;
         }
-        matrixAccount.setAccessToken(answerDto.getAccessToken());
-        matrixAccount.setHomeServer(answerDto.getHomeServer());
-        matrixAccount.setUserId(answerDto.getUserId());
-        matrixAccount.addMessage("Successfully logged in. Token=" + matrixAccount.getAccessToken());
-        matrixAccount.setState(MatrixAccount.State.LOGGEDIN);
+        accessToken = answerDto.getAccessToken();
+        homeServer = answerDto.getHomeServer();
+        userId = answerDto.getUserId();
+        state = State.LOGGEDIN;
+        addMessage("Successfully logged in. Token=" + accessToken);
+    }
+
+    private void addMessage(String message) {
+        eventQueue.addEvent(message);
+        haveNewEvents = true;
+    }
+
+    private void addMessages(Collection<String> messages) {
+        if (messages.isEmpty())
+            return;
+        eventQueue.addEvents(messages);
+        haveNewEvents = true;
     }
 
     private void initialSync() {
-       boolean success = sync(matrixService -> matrixService.sync(matrixAccount.getAccessToken()));
+       boolean success = sync(matrixService -> matrixService.sync(accessToken));
        if (success)
-           matrixAccount.setState(MatrixAccount.State.INITIAL_SYNCED);
+           state = State.INITIAL_SYNCED;
     }
 
     private void stepSync() {
-        sync(matrixService -> matrixService.sync(matrixAccount.getAccessToken(), matrixAccount.getNextBatchId(), 3000));
+        sync(matrixService -> matrixService.sync(accessToken, nextBatchId, accountConfig.getSyncTimeout()));
     }
 
     private boolean sync(Function<MatrixService, Call<SyncResponseDto>> requestFunction) {
@@ -115,17 +124,17 @@ public class MatrixClient extends Task<Void> {
         try {
             syncResponseDto = apiConnector.issueRequest(requestFunction);
         } catch (ApiConnectException ex) {
-            LOG.error("Failed to synchronize {} with server because of input/output error", matrixAccount.getAccountConfig(), ex);
-            matrixAccount.addMessage("Failed to sync because of IOException");
+            LOG.error("Failed to synchronize {} with server because of input/output error", accountConfig, ex);
+            addMessage("Failed to sync because of IOException");
             return false;
         } catch (ApiRequestException ex) {
-            LOG.error("Failed to synchronize {} with server, got {}", matrixAccount.getAccountConfig(), ex.getApiError(), ex);
-            matrixAccount.addMessage("Failed to sync with " + ex.getApiError());
+            LOG.error("Failed to synchronize {} with server, got {}", accountConfig, ex.getApiError(), ex);
+            addMessage("Failed to sync with " + ex.getApiError());
             return false;
         }
-        matrixAccount.setNextBatchId(syncResponseDto.getNextBatch());
+        nextBatchId = syncResponseDto.getNextBatch();
         List<String> newMessages = extractNewMessages(syncResponseDto);
-        matrixAccount.addMessages(newMessages);
+        addMessages(newMessages);
         return true;
     }
 
@@ -142,6 +151,10 @@ public class MatrixClient extends Task<Void> {
                     .forEach(messagesList::add);
         }
         return messagesList;
+    }
+
+    public enum State {
+        NOT_CONNECTED, CONNECTED, LOGGEDIN, INITIAL_SYNCED;
     }
 
 }

@@ -1,6 +1,6 @@
 package com.dmytrobilokha.disturber.network;
 
-import javafx.collections.ObservableList;
+import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import javafx.concurrent.Service;
 import javafx.concurrent.Task;
 
@@ -9,18 +9,17 @@ import javafx.concurrent.Task;
  */
 public class SynchronizeMessageService extends Service<Void> {
 
-    private final ObservableList<String> messageList;
-    private final MatrixAccount matrixAccount;
+    private final AccountConfig accountConfig;
+    private final MatrixEventQueue eventQueue;
 
-    SynchronizeMessageService(ObservableList<String> messageList, MatrixAccount account) {
-        this.messageList = messageList;
-        this.matrixAccount = account;
+    SynchronizeMessageService(AccountConfig accountConfig, MatrixEventQueue eventQueue) {
+        this.accountConfig = accountConfig;
+        this.eventQueue = eventQueue;
     }
 
     @Override
     protected Task<Void> createTask() {
-        return new MatrixClient(messageList, matrixAccount
-                , new MatrixApiConnector(matrixAccount.getNetworkConnectionConfig()));
+        return new MatrixClient(accountConfig, eventQueue, new MatrixApiConnector());
     }
 
 }

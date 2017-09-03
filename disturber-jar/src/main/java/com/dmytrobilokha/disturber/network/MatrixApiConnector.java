@@ -1,6 +1,5 @@
 package com.dmytrobilokha.disturber.network;
 
-import com.dmytrobilokha.disturber.config.connection.NetworkConnectionConfig;
 import com.dmytrobilokha.disturber.network.dto.ErrorDto;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
@@ -25,31 +24,24 @@ class MatrixApiConnector {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixApiConnector.class);
 
-    private final NetworkConnectionConfig networkConnectionConfig;
-
     private MatrixService matrixService;
     private Converter<ResponseBody, ErrorDto> errorConverter;
 
-    MatrixApiConnector(NetworkConnectionConfig networkConnectionConfig) {
-        this.networkConnectionConfig = networkConnectionConfig;
-    }
-
-    void createConnection(String baseUrl) {
+    void createConnection(String baseUrl, int networkTimeout) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(JacksonConverterFactory.create())
-                .client(buildConfiguredHttpClient())
+                .client(buildConfiguredHttpClient(networkTimeout))
                 .build();
         matrixService = retrofit.create(MatrixService.class);
         errorConverter = retrofit.responseBodyConverter(ApiError.class, new Annotation[0]);
     }
 
-    private OkHttpClient buildConfiguredHttpClient() {
-        int timeout = networkConnectionConfig.getConnectionTimeout();
+    private OkHttpClient buildConfiguredHttpClient(int networkTimeout) {
         return new OkHttpClient.Builder()
-                .readTimeout(timeout, TimeUnit.SECONDS)
-                .connectTimeout(timeout, TimeUnit.SECONDS)
-                .writeTimeout(timeout, TimeUnit.SECONDS)
+                .readTimeout(networkTimeout, TimeUnit.MILLISECONDS)
+                .connectTimeout(networkTimeout, TimeUnit.MILLISECONDS)
+                .writeTimeout(networkTimeout, TimeUnit.MILLISECONDS)
                 .retryOnConnectionFailure(true)
                 .build();
     }

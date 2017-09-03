@@ -85,7 +85,13 @@ public class AccountConfigFactory {
     }
 
     private AccountConfig mapDtoToConfig(AccountConfigDto configDto) {
-        return new AccountConfig(configDto.getServerAddress(), configDto.getLogin(), configDto.getPassword());
+        return new AccountConfig(
+                configDto.getServerAddress()
+                , configDto.getLogin()
+                , configDto.getPassword()
+                , configDto.getBetweenSyncPause()
+                , configDto.getSyncTimeout()
+                , configDto.getNetworkTimeout());
     }
 
     public void saveAccountConfigs(AccountsDto accountsDto) throws AccountConfigAccessException {

@@ -2,11 +2,11 @@ package com.dmytrobilokha.disturber.network;
 
 
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
-import com.dmytrobilokha.disturber.config.connection.NetworkConnectionConfigFactory;
+import javafx.application.Platform;
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 
 import javax.enterprise.context.ApplicationScoped;
-import javax.inject.Inject;
 
 /**
  * Created by dimon on 13.08.17.
@@ -14,20 +14,24 @@ import javax.inject.Inject;
 @ApplicationScoped
 public class MatrixClientService {
 
-    private NetworkConnectionConfigFactory networkConnectionConfigFactory;
+    private final Runnable eventCallback = () -> Platform.runLater(this::eventCallback);
+    private final MatrixEventQueue eventQueue = new MatrixEventQueue(eventCallback);
+    private final ObservableList<String> messageList = FXCollections.observableArrayList("Test1", "Test2", "Test3");
 
-    protected MatrixClientService() {
+    public MatrixClientService() {
         //Empty no-args constructor to keep CDI framework happy
     }
 
-    @Inject
-    public MatrixClientService(NetworkConnectionConfigFactory networkConnectionConfigFactory) {
-        this.networkConnectionConfigFactory = networkConnectionConfigFactory;
+    public ObservableList<String> connect(AccountConfig accountConfig) {
+        new SynchronizeMessageService(accountConfig, eventQueue).start();
+        return messageList;
     }
 
-    public void connect(ObservableList<String> messageList, AccountConfig accountConfig) {
-        MatrixAccount account = new MatrixAccount(accountConfig, networkConnectionConfigFactory.getNetworkConnectionConfig());
-        new SynchronizeMessageService(messageList, account).start();
+    private void eventCallback() {
+        String message;
+        while ((message = eventQueue.pollEvent()) != null) {
+            messageList.add(message);
+        }
     }
 
 }
