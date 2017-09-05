@@ -9,16 +9,14 @@ import java.time.ZoneId;
  */
 public final class MatrixEvent {
 
-    private final String userId;
-    private final String roomId;
+    private final RoomKey roomKey;
     private final String sender;
     private final String contentType;
     private final String content;
     private final LocalDateTime serverTimestamp;
 
     private MatrixEvent(Builder builder) {
-        userId = builder.userId;
-        roomId = builder.roomId;
+        roomKey = builder.roomKey;
         sender = builder.sender;
         contentType = builder.contentType;
         content = builder.content;
@@ -29,15 +27,34 @@ public final class MatrixEvent {
         return new Builder();
     }
 
+    public RoomKey getRoomKey() {
+        return roomKey;
+    }
+
+    public String getSender() {
+        return sender;
+    }
+
+    public String getContentType() {
+        return contentType;
+    }
+
+    public String getContent() {
+        return content;
+    }
+
+    public LocalDateTime getServerTimestamp() {
+        return serverTimestamp;
+    }
+
     @Override
     public String toString() {
-        return "" + serverTimestamp + '|' + userId + '|' + roomId + '|' + sender + '|' + contentType + '|' + content;
+        return "" + serverTimestamp + '|' + sender + '|' + contentType + '|' + content;
     }
 
     public static class Builder {
 
-        private String userId;
-        private String roomId;
+        private RoomKey roomKey;
         private String sender;
         private String contentType;
         private String content;
@@ -47,13 +64,8 @@ public final class MatrixEvent {
             //private constructor to restrict instantiation
         }
 
-        public Builder userId(String userId) {
-            this.userId = userId;
-            return this;
-        }
-
-        public Builder roomId(String roomId) {
-            this.roomId = roomId;
+        public Builder roomKey(RoomKey roomKey) {
+            this.roomKey = roomKey;
             return this;
         }
 
@@ -78,10 +90,17 @@ public final class MatrixEvent {
         }
 
         public MatrixEvent build() {
-            if (userId == null || roomId == null)
-                throw new IllegalStateException("Fields userId and roomId should not be null");
+            validate();
             return new MatrixEvent(this);
         }
+
+        private void validate() {
+            if (this.serverTimestamp == null)
+                throw new IllegalStateException("Unable to build, because serverTimestamp has not been set");
+            if (this.roomKey == null)
+                throw new IllegalStateException("Unable to build, because roomKey is null");
+        }
+
     }
 
 }
