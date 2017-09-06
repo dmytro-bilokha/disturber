@@ -1,8 +1,7 @@
 package com.dmytrobilokha.disturber.controller;
 
-import com.dmytrobilokha.disturber.stevent.StEvent;
-import com.dmytrobilokha.disturber.stevent.StEventBus;
-import com.dmytrobilokha.disturber.stevent.StEventListener;
+import com.dmytrobilokha.disturber.appeventbus.AppEvent;
+import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.service.MessageService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -16,7 +15,7 @@ import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
 @Dependent
-public class Tab2Controller implements StEventListener<String> {
+public class Tab2Controller {
 
     private static final Logger LOG = LoggerFactory.getLogger(Tab2Controller.class);
 
@@ -24,10 +23,10 @@ public class Tab2Controller implements StEventListener<String> {
     private Label nameValueLabel;
 
     private MessageService messageService;
-    private StEventBus eventBus;
+    private AppEventBus eventBus;
 
     @Inject
-    public Tab2Controller(MessageService messageService, StEventBus eventBus) {
+    public Tab2Controller(MessageService messageService, AppEventBus eventBus) {
         LOG.info("Tab2Controller constructor called. And message is '{}'", messageService.getMessage());
         this.messageService = messageService;
         this.eventBus = eventBus;
@@ -35,7 +34,7 @@ public class Tab2Controller implements StEventListener<String> {
 
     @PostConstruct
     public void init() {
-        eventBus.subscribe(this, StEvent.Type.USER_NAME_CHANGED);
+        eventBus.subscribe(this::onAppEvent, AppEvent.of(AppEvent.Type.USER_NAME_CHANGED, "subscribe"));
         LOG.debug("Subscribed to events");
     }
 
@@ -48,8 +47,7 @@ public class Tab2Controller implements StEventListener<String> {
         LOG.debug("Got event {}", event);
     }
 
-    @Override
-    public void onStEvent(StEvent<String> stEvent) {
-        nameValueLabel.setText("Hello, " + stEvent.getPayload());
+    public void onAppEvent(AppEvent appEvent) {
+        nameValueLabel.setText("Hello, " + appEvent.getPayload());
     }
 }

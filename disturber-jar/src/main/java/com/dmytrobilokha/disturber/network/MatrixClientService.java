@@ -1,14 +1,16 @@
 package com.dmytrobilokha.disturber.network;
 
 
+import com.dmytrobilokha.disturber.appeventbus.AppEvent;
+import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.config.account.AccountConfigFactory;
-import com.dmytrobilokha.disturber.service.PlatformService;
 
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,22 +30,18 @@ public class MatrixClientService {
     private MatrixEventQueue eventQueue;
 
     private AccountConfigFactory accountConfigFactory;
-    private PlatformService platformService;
-    private NewRoomHandler newRoomHandler;
+    private AppEventBus appEventBus;
 
     protected MatrixClientService() {
         //Empty no-args constructor to keep CDI framework happy
     }
 
     @Inject
-    protected MatrixClientService(AccountConfigFactory accountConfigFactory, PlatformService platformService) {
+    protected MatrixClientService(AccountConfigFactory accountConfigFactory, AppEventBus appEventBus
+            , RunLaterWrapper runLaterWrapper) {
         this.accountConfigFactory = accountConfigFactory;
-        this.platformService = platformService;
-        this.eventQueue = new MatrixEventQueue(platformService.createRunLaterCallback(this::eventCallback));
-    }
-
-    public void setNewRoomHandler(NewRoomHandler newRoomHandler) {
-        this.newRoomHandler = newRoomHandler;
+        this.appEventBus = appEventBus;
+        this.eventQueue = new MatrixEventQueue(runLaterWrapper.wrap(this::eventCallback));
     }
 
     public void connect() throws AccountConfigAccessException {
@@ -55,7 +53,6 @@ public class MatrixClientService {
                 synchronizer.start();
             }
         }
-        return;
     }
 
     public Map<String, Set<String>> getRoomsStructure() {
@@ -74,10 +71,8 @@ public class MatrixClientService {
         while ((event = eventQueue.pollEvent()) != null) {
             RoomKey roomKey = event.getRoomKey();
             if (!roomEventMap.containsKey(roomKey)) {
-                roomEventMap.put(roomKey, platformService.createList()); //TODO: use regular List<MatrixEvent> instead
-                                                                        //and let FX controller convert it to viewable stuff
-                if (newRoomHandler != null)
-                    newRoomHandler.onNewRoom(roomKey);
+                roomEventMap.put(roomKey, new ArrayList<>());
+                appEventBus.fire(AppEvent.of(AppEvent.Type.MATRIX_NEW_ROOM_SYNCED, roomKey));
             }
             roomEventMap.get(roomKey).add(event.toString());
         }

@@ -1,7 +1,7 @@
 package com.dmytrobilokha.disturber.controller;
 
-import com.dmytrobilokha.disturber.stevent.StEvent;
-import com.dmytrobilokha.disturber.stevent.StEventBus;
+import com.dmytrobilokha.disturber.appeventbus.AppEvent;
+import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.service.MessageService;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -25,10 +25,10 @@ public class Tab1Controller {
     private TextField name;
 
     private MessageService messageService;
-    private StEventBus eventBus;
+    private AppEventBus eventBus;
 
     @Inject
-    public Tab1Controller(MessageService messageService, StEventBus eventBus) {
+    public Tab1Controller(MessageService messageService, AppEventBus eventBus) {
         LOG.info("Tab1Controller constructor called. And message is '{}'", messageService.getMessage());
         this.messageService = messageService;
         this.eventBus = eventBus;
@@ -42,8 +42,8 @@ public class Tab1Controller {
     public void submitHandler(ActionEvent event) {
         String nameSubmitted = name.getText();
         LOG.info("Submitted name '{}'", nameSubmitted);
-        int notified = eventBus.fire(StEvent.of(StEvent.Type.USER_NAME_CHANGED, nameSubmitted));
-        LOG.debug("Notified " + notified + " listeners");
+        eventBus.fire(AppEvent.of(AppEvent.Type.USER_NAME_CHANGED, nameSubmitted));
+        LOG.debug("Notified listeners");
     }
 
 }

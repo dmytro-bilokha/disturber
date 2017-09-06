@@ -1,8 +1,10 @@
 package com.dmytrobilokha.disturber.controller;
 
+import com.dmytrobilokha.disturber.appeventbus.AppEvent;
+import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
+import com.dmytrobilokha.disturber.appeventbus.AppEventListener;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.network.MatrixClientService;
-import com.dmytrobilokha.disturber.network.NewRoomHandler;
 import com.dmytrobilokha.disturber.network.RoomKey;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -18,10 +20,12 @@ import javax.inject.Inject;
  * Controller for the main layout fxml
  */
 @Dependent
-public class MainLayoutController implements NewRoomHandler {
+public class MainLayoutController {
 
     private final TreeItem<String> root = new TreeItem<>("ROOT");
+    private final AppEventListener<Void, RoomKey> newRoomListener = this::onNewRoom;
     private final MatrixClientService clientService;
+    private final AppEventBus appEventBus;
 
     private ObservableList<String> messageList;
 
@@ -33,14 +37,15 @@ public class MainLayoutController implements NewRoomHandler {
     private TextArea messageTyped;
 
     @Inject
-    public MainLayoutController(MatrixClientService clientService) {
+    public MainLayoutController(MatrixClientService clientService, AppEventBus appEventBus) {
         this.clientService = clientService;
+        this.appEventBus = appEventBus;
     }
 
     @FXML
     public void initialize() {
         roomsView.setRoot(root);
-        clientService.setNewRoomHandler(this);
+        appEventBus.subscribe(this.newRoomListener, AppEvent.empty(AppEvent.Type.MATRIX_NEW_ROOM_SYNCED));
         try {
             clientService.connect();
         } catch (AccountConfigAccessException ex) {
@@ -55,17 +60,18 @@ public class MainLayoutController implements NewRoomHandler {
         messageTyped.clear();
     }
 
-    @Override
-    public void onNewRoom(RoomKey roomKey) {
+    public void onNewRoom(AppEvent<Void, RoomKey> appEvent) {
+        RoomKey roomKey = appEvent.getPayload();
         TreeItem<String> userIdNode = root.getChildren().stream()
                 .filter(node -> node.getValue().equals(roomKey.getUserId()))
                 .findAny()
                 .orElseGet(() -> attachNewUserId(roomKey.getUserId()));
         userIdNode.getChildren().add(new TreeItem<>(roomKey.getRoomId()));
         roomsView.refresh();
-        messageList = (ObservableList<String>) clientService.getRoomEventsList(roomKey);
+        //TODO migrate to fully messaging
+/*        messageList = (ObservableList<String>) clientService.getRoomEventsList(roomKey);
         messageListView.setItems(messageList);
-        messageListView.refresh();
+        messageListView.refresh();*/
     }
 
     private TreeItem<String> attachNewUserId(String userId) {
