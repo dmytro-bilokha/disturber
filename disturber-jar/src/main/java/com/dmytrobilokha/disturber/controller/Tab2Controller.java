@@ -34,8 +34,6 @@ public class Tab2Controller {
 
     @PostConstruct
     public void init() {
-        eventBus.subscribe(this::onAppEvent, AppEvent.of(AppEvent.Type.USER_NAME_CHANGED, "subscribe"));
-        LOG.debug("Subscribed to events");
     }
 
     @PreDestroy

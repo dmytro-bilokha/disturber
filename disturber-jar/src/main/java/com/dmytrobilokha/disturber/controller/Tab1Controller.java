@@ -1,6 +1,5 @@
 package com.dmytrobilokha.disturber.controller;
 
-import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.service.MessageService;
 import javafx.event.ActionEvent;
@@ -42,7 +41,6 @@ public class Tab1Controller {
     public void submitHandler(ActionEvent event) {
         String nameSubmitted = name.getText();
         LOG.info("Submitted name '{}'", nameSubmitted);
-        eventBus.fire(AppEvent.of(AppEvent.Type.USER_NAME_CHANGED, nameSubmitted));
         LOG.debug("Notified listeners");
     }
 

@@ -3,6 +3,7 @@ package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
+import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.config.account.AccountConfigFactory;
@@ -72,9 +73,11 @@ public class MatrixClientService {
             RoomKey roomKey = event.getRoomKey();
             if (!roomEventMap.containsKey(roomKey)) {
                 roomEventMap.put(roomKey, new ArrayList<>());
-                appEventBus.fire(AppEvent.of(AppEvent.Type.MATRIX_NEW_ROOM_SYNCED, roomKey));
+                appEventBus.fire(AppEvent.withPayload(AppEventType.MATRIX_NEW_ROOM_SYNCED, roomKey));
             }
             roomEventMap.get(roomKey).add(event.toString());
+            appEventBus.fire(AppEvent
+                    .withClassifierAndPayload(AppEventType.MATRIX_NEW_MESSAGE_GOT, roomKey, event.toString()));
         }
     }
 
