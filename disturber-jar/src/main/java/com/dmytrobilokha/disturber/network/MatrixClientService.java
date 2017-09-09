@@ -3,7 +3,6 @@ package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
-import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.config.account.AccountConfigFactory;
@@ -11,7 +10,6 @@ import com.dmytrobilokha.disturber.config.account.AccountConfigFactory;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +26,7 @@ public class MatrixClientService {
     private final Map<AccountConfig, MatrixSynchronizer> connectedAccounts = new HashMap<>();
     private final Map<RoomKey, List<String>> roomEventMap = new HashMap<>();
 
-    private MatrixEventQueue eventQueue;
+    private CrossThreadEventQueue eventQueue;
 
     private AccountConfigFactory accountConfigFactory;
     private AppEventBus appEventBus;
@@ -42,7 +40,7 @@ public class MatrixClientService {
             , RunLaterWrapper runLaterWrapper) {
         this.accountConfigFactory = accountConfigFactory;
         this.appEventBus = appEventBus;
-        this.eventQueue = new MatrixEventQueue(runLaterWrapper.wrap(this::eventCallback));
+        this.eventQueue = new CrossThreadEventQueue(runLaterWrapper.wrap(this::eventCallback));
     }
 
     public void connect() throws AccountConfigAccessException {
@@ -63,21 +61,10 @@ public class MatrixClientService {
                                 , Collectors.mapping(RoomKey::getRoomId, Collectors.toSet())));
     }
 
-    public List<String> getRoomEventsList(RoomKey roomKey) {
-        return roomEventMap.get(roomKey);
-    }
-
     private void eventCallback() {
-        MatrixEvent event;
+        AppEvent event;
         while ((event = eventQueue.pollEvent()) != null) {
-            RoomKey roomKey = event.getRoomKey();
-            if (!roomEventMap.containsKey(roomKey)) {
-                roomEventMap.put(roomKey, new ArrayList<>());
-                appEventBus.fire(AppEvent.withPayload(AppEventType.MATRIX_NEW_ROOM_SYNCED, roomKey));
-            }
-            roomEventMap.get(roomKey).add(event.toString());
-            appEventBus.fire(AppEvent
-                    .withClassifierAndPayload(AppEventType.MATRIX_NEW_MESSAGE_GOT, roomKey, event.toString()));
+            appEventBus.fire(event);
         }
     }
 

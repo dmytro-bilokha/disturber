@@ -6,6 +6,7 @@ import com.dmytrobilokha.disturber.appeventbus.AppEventListener;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.network.MatrixClientService;
+import com.dmytrobilokha.disturber.network.MatrixEvent;
 import com.dmytrobilokha.disturber.network.RoomKey;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -17,6 +18,7 @@ import javafx.scene.control.TreeView;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
+import java.util.Optional;
 
 /**
  * Controller for the main layout fxml
@@ -25,14 +27,11 @@ import javax.inject.Inject;
 public class MainLayoutController {
 
     private final TreeItem<String> root = new TreeItem<>("ROOT");
-    private final AppEventListener<Void, RoomKey> newRoomListener = this::onNewRoom;
-    private final AppEventListener<RoomKey, String> newEventListener = this::onNewRoomEvent;
+    private final AppEventListener<RoomKey, MatrixEvent> newRoomEventListener = this::onNewRoomEvent;
     private final MatrixClientService clientService;
     private final AppEventBus appEventBus;
 
     private final ObservableList<String> messageList = FXCollections.observableArrayList();
-
-    private boolean subscribed;
 
     @FXML
     private TreeView<String> roomsView;
@@ -51,7 +50,7 @@ public class MainLayoutController {
     public void initialize() {
         messageListView.setItems(messageList);
         roomsView.setRoot(root);
-        appEventBus.subscribe(this.newRoomListener, AppEventType.MATRIX_NEW_ROOM_SYNCED);
+        appEventBus.subscribe(this.newRoomEventListener, AppEventType.MATRIX_NEW_EVENT_GOT);
         try {
             clientService.connect();
         } catch (AccountConfigAccessException ex) {
@@ -66,18 +65,20 @@ public class MainLayoutController {
         messageTyped.clear();
     }
 
-    private void onNewRoom(AppEvent<Void, RoomKey> appEvent) {
-        RoomKey roomKey = appEvent.getPayload();
+    private void onNewRoomEvent(AppEvent<RoomKey, MatrixEvent> appEvent) {
+        RoomKey roomKey = appEvent.getClassifier();
         TreeItem<String> userIdNode = root.getChildren().stream()
                 .filter(node -> node.getValue().equals(roomKey.getUserId()))
                 .findAny()
                 .orElseGet(() -> attachNewUserId(roomKey.getUserId()));
-        userIdNode.getChildren().add(new TreeItem<>(roomKey.getRoomId()));
+        Optional<TreeItem<String>> roomIdNode = userIdNode.getChildren().stream()
+                .filter(node -> node.getValue().equals(roomKey.getRoomId()))
+                .findAny();
+        if (!roomIdNode.isPresent())
+            userIdNode.getChildren().add(new TreeItem<>(roomKey.getRoomId()));
         roomsView.refresh();
-        if (!"SYSTEM".equals(roomKey.getRoomId()) && !subscribed) {
-            appEventBus.subscribe(newEventListener, AppEventType.MATRIX_NEW_MESSAGE_GOT, roomKey);
-            subscribed = true;
-        }
+        MatrixEvent matrixEvent = appEvent.getPayload();
+        messageList.add(matrixEvent.toString());
         messageListView.refresh();
     }
 
@@ -85,10 +86,6 @@ public class MainLayoutController {
         TreeItem<String> userIdNode = new TreeItem<>(userId);
         root.getChildren().add(userIdNode);
         return userIdNode;
-    }
-
-    private void onNewRoomEvent(AppEvent<RoomKey, String> appEvent) {
-        messageList.add(appEvent.getPayload());
     }
 
 }

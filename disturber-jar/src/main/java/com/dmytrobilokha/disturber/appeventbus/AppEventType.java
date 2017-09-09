@@ -1,10 +1,17 @@
 package com.dmytrobilokha.disturber.appeventbus;
 
+import com.dmytrobilokha.disturber.config.account.AccountConfig;
+import com.dmytrobilokha.disturber.network.MatrixEvent;
 import com.dmytrobilokha.disturber.network.RoomKey;
 
 public enum AppEventType {
-    MATRIX_NEW_ROOM_SYNCED(null, RoomKey.class)
-    , MATRIX_NEW_MESSAGE_GOT(RoomKey.class, String.class);
+    MATRIX_NEW_EVENT_GOT(RoomKey.class, MatrixEvent.class)
+    , MATRIX_LOGGEDIN(String.class, null)
+    , MATRIX_LOGIN_CONNECTION_FAILED(AccountConfig.class, null)
+    , MATRIX_LOGIN_FAILED(AccountConfig.class, null)
+    , MATRIX_SYNC_CONNECTION_FAILED(String.class, null)
+    , MATRIX_SYNC_FAILED(String.class, null)
+    ;
 
     private final Class classifierClass;
     private final Class payloadClass;

@@ -1,5 +1,7 @@
 package com.dmytrobilokha.disturber.network;
 
+import com.dmytrobilokha.disturber.appeventbus.AppEvent;
+import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.network.dto.EventDto;
 import com.dmytrobilokha.disturber.network.dto.JoinedRoomDto;
@@ -10,8 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -24,13 +24,11 @@ import java.util.function.Function;
 public class MatrixSynchronizer extends Thread {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixSynchronizer.class);
-    private static final String SYSTEM = "SYSTEM";
-    private static final String TEXT_CONTENT = "m.text";
 
     private final AccountConfig accountConfig;
-    private final MatrixEventQueue eventQueue;
+    private final CrossThreadEventQueue eventQueue;
     private final MatrixApiConnector apiConnector;
-    private final MatrixEvent.Builder eventBuilder;
+    private final MatrixEvent.Builder matrixEventBuilder;
 
     private State state = State.NOT_CONNECTED;
     private String accessToken;
@@ -39,11 +37,11 @@ public class MatrixSynchronizer extends Thread {
     private boolean haveNewEvents;
     private volatile boolean keepGoing = true;
 
-    MatrixSynchronizer(AccountConfig accountConfig, MatrixEventQueue eventQueue, MatrixApiConnector apiConnector) {
+    MatrixSynchronizer(AccountConfig accountConfig, CrossThreadEventQueue eventQueue, MatrixApiConnector apiConnector) {
         this.accountConfig = accountConfig;
         this.eventQueue = eventQueue;
         this.apiConnector = apiConnector;
-        this.eventBuilder = MatrixEvent.newBuilder();
+        this.matrixEventBuilder = MatrixEvent.newBuilder();
     }
 
     @Override
@@ -68,6 +66,8 @@ public class MatrixSynchronizer extends Thread {
             }
             if (haveNewEvents)
                 eventQueue.triggerEventCallback();
+            if (!keepGoing) //Check keepGoing flag once again to make app more responsive in case of shut down
+                break;
             try {
                 Thread.sleep(accountConfig.getBetweenSyncPause());
             } catch (InterruptedException ex) {
@@ -97,40 +97,25 @@ public class MatrixSynchronizer extends Thread {
             answerDto = apiConnector.issueRequest(matrixService -> matrixService.login(loginPasswordDto));
         } catch (ApiConnectException ex) {
             LOG.error("Failed to login with {}", accountConfig, ex);
-            sendSystemMessage("Failed to login, because of input/output error");
+            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_LOGIN_CONNECTION_FAILED, accountConfig));
             return;
         } catch (ApiRequestException ex) {
             LOG.error("Failed to login with {}, got {}", accountConfig, ex.getApiError(), ex);
-            sendSystemMessage("Failed to log in with " + ex.getApiError());
+            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_LOGIN_FAILED, accountConfig));
             return;
         }
         accessToken = answerDto.getAccessToken();
         userId = answerDto.getUserId();
         state = State.LOGGEDIN;
-        sendSystemMessage("Successfully logged in. Token=" + accessToken);
+        addEvent(AppEvent.withClassifier(AppEventType.MATRIX_LOGGEDIN, userId));
     }
 
-    private void sendSystemMessage(String message) {
-        eventQueue.addEvent(eventBuilder
-                .roomKey(new RoomKey(userId == null ? buildUserId() : userId, SYSTEM))
-                .sender(SYSTEM)
-                .contentType(TEXT_CONTENT)
-                .content(message)
-                .serverTimestamp(System.currentTimeMillis())
-                .build());
+    private void addEvent(AppEvent event) {
+        eventQueue.addEvent(event);
         haveNewEvents = true;
     }
 
-    private String buildUserId() {
-        try {
-            return '@' + accountConfig.getLogin() + ':' + new URL(accountConfig.getServerAddress()).getHost();
-        } catch (MalformedURLException ex) {
-            LOG.error("{} contains invalid server URL", accountConfig.getServerAddress(), ex);
-            return '@' + accountConfig.getLogin() + ':' + accountConfig.getServerAddress();
-        }
-    }
-
-    private void addEventsToQueue(Collection<MatrixEvent> events) {
+    private void addEvents(Collection<AppEvent> events) {
         if (events.isEmpty())
             return;
         eventQueue.addEvents(events);
@@ -153,34 +138,36 @@ public class MatrixSynchronizer extends Thread {
             syncResponseDto = apiConnector.issueRequest(requestFunction);
         } catch (ApiConnectException ex) {
             LOG.error("Failed to synchronize {} with server because of input/output error", accountConfig, ex);
-            sendSystemMessage("Failed to sync because of IOException");
+            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNC_CONNECTION_FAILED, userId));
             return false;
         } catch (ApiRequestException ex) {
             LOG.error("Failed to synchronize {} with server, got {}", accountConfig, ex.getApiError(), ex);
-            sendSystemMessage("Failed to sync with " + ex.getApiError());
+            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNC_FAILED, userId));
             return false;
         }
         nextBatchId = syncResponseDto.getNextBatch();
-        List<MatrixEvent> events = extractEvents(syncResponseDto);
-        addEventsToQueue(events);
+        List<AppEvent> events = mapSyncResponseDtoToAppEvents(syncResponseDto);
+        addEvents(events);
         return true;
     }
 
-    private List<MatrixEvent> extractEvents(SyncResponseDto syncResponseDto) {
+    private List<AppEvent> mapSyncResponseDtoToAppEvents(SyncResponseDto syncResponseDto) {
         Map<String, JoinedRoomDto> joinedRoomMap = syncResponseDto.getRooms().getJoinedRoomMap();
-        List<MatrixEvent> messagesList = new ArrayList<>();
+        List<AppEvent> appEvents = new ArrayList<>();
         for (Map.Entry<String, JoinedRoomDto> joinedRoomDtoEntry : joinedRoomMap.entrySet()) {
-            eventBuilder.roomKey(new RoomKey(userId, joinedRoomDtoEntry.getKey()));
+            RoomKey roomKey = new RoomKey(userId, joinedRoomDtoEntry.getKey());
             List<EventDto> eventDtos = joinedRoomDtoEntry.getValue().getTimeline().getEvents();
             for (EventDto eventDto : eventDtos) {
-                messagesList.add(eventBuilder.serverTimestamp(eventDto.getServerTimestamp())
+                MatrixEvent matrixEvent = matrixEventBuilder
+                        .serverTimestamp(eventDto.getServerTimestamp())
                         .sender(eventDto.getSender())
                         .contentType(eventDto.getContent().getMsgType())
                         .content(eventDto.getContent().getBody())
-                        .build());
+                        .build();
+                appEvents.add(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_NEW_EVENT_GOT, roomKey, matrixEvent));
             }
         }
-        return messagesList;
+        return appEvents;
     }
 
     private enum State {

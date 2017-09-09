@@ -9,14 +9,12 @@ import java.time.ZoneId;
  */
 public final class MatrixEvent {
 
-    private final RoomKey roomKey;
     private final String sender;
     private final String contentType;
     private final String content;
     private final LocalDateTime serverTimestamp;
 
     private MatrixEvent(Builder builder) {
-        roomKey = builder.roomKey;
         sender = builder.sender;
         contentType = builder.contentType;
         content = builder.content;
@@ -25,10 +23,6 @@ public final class MatrixEvent {
 
     public static Builder newBuilder() {
         return new Builder();
-    }
-
-    public RoomKey getRoomKey() {
-        return roomKey;
     }
 
     public String getSender() {
@@ -54,7 +48,6 @@ public final class MatrixEvent {
 
     public static class Builder {
 
-        private RoomKey roomKey;
         private String sender;
         private String contentType;
         private String content;
@@ -62,11 +55,6 @@ public final class MatrixEvent {
 
         private Builder() {
             //private constructor to restrict instantiation
-        }
-
-        public Builder roomKey(RoomKey roomKey) {
-            this.roomKey = roomKey;
-            return this;
         }
 
         public Builder sender(String sender) {
@@ -97,8 +85,6 @@ public final class MatrixEvent {
         private void validate() {
             if (this.serverTimestamp == null)
                 throw new IllegalStateException("Unable to build, because serverTimestamp has not been set");
-            if (this.roomKey == null)
-                throw new IllegalStateException("Unable to build, because roomKey is null");
         }
 
     }
