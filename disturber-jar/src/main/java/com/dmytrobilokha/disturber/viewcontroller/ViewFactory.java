@@ -1,7 +1,7 @@
-package com.dmytrobilokha.disturber.view;
+package com.dmytrobilokha.disturber.viewcontroller;
 
 import com.dmytrobilokha.disturber.boot.FXMLLoaderProducer;
-import com.dmytrobilokha.disturber.controller.ChatTabController;
+import com.dmytrobilokha.disturber.viewcontroller.chattab.ChatTabController;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Tab;
@@ -19,8 +19,7 @@ import java.io.IOException;
 public class ViewFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(ViewFactory.class);
-    private static final String FXMLS_LOCATION = "/fxml/";
-    private static final String CHAT_TAB_FXML = FXMLS_LOCATION + "ChatTab.fxml";
+    private static final String CHAT_TAB_FXML = "chattab/ChatTab.fxml";
 
     private FXMLLoaderProducer fxmlLoaderProducer;
 

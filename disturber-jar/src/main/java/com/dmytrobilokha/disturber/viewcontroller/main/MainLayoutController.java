@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.controller.mainlayout;
+package com.dmytrobilokha.disturber.viewcontroller.main;
 
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
@@ -8,7 +8,7 @@ import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.network.MatrixClientService;
 import com.dmytrobilokha.disturber.network.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
-import com.dmytrobilokha.disturber.view.ViewFactory;
+import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
 import javafx.fxml.FXML;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;

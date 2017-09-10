@@ -20,7 +20,7 @@ import java.util.Set;
 
 public class Loader extends Application {
 
-    private static final String MAIN_FXML = "/fxml/MainLayout.fxml";
+    private static final String MAIN_FXML = "/com/dmytrobilokha/disturber/viewcontroller/main/MainLayout.fxml";
 
     public static void main(String[] args) {
         launch(args);

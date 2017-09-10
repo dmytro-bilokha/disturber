@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.controller;
+package com.dmytrobilokha.disturber.viewcontroller.chattab;
 
 import com.dmytrobilokha.disturber.MatrixEventsHistoryKeeper;
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
