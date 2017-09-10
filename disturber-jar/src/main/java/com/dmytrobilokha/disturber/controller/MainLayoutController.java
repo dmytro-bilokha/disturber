@@ -8,10 +8,10 @@ import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.network.MatrixClientService;
 import com.dmytrobilokha.disturber.network.MatrixEvent;
 import com.dmytrobilokha.disturber.network.RoomKey;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import com.dmytrobilokha.disturber.view.ViewFactory;
 import javafx.fxml.FXML;
-import javafx.scene.control.ListView;
+import javafx.scene.control.Tab;
+import javafx.scene.control.TabPane;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
@@ -30,25 +30,24 @@ public class MainLayoutController {
     private final AppEventListener<RoomKey, MatrixEvent> newRoomEventListener = this::onNewRoomEvent;
     private final MatrixClientService clientService;
     private final AppEventBus appEventBus;
-
-    private final ObservableList<String> messageList = FXCollections.observableArrayList();
+    private final ViewFactory viewFactory;
 
     @FXML
     private TreeView<String> roomsView;
     @FXML
-    private ListView<String> messageListView;
+    private TabPane chatTabPane;
     @FXML
     private TextArea messageTyped;
 
     @Inject
-    public MainLayoutController(MatrixClientService clientService, AppEventBus appEventBus) {
+    public MainLayoutController(MatrixClientService clientService, AppEventBus appEventBus, ViewFactory viewFactory) {
         this.clientService = clientService;
         this.appEventBus = appEventBus;
+        this.viewFactory = viewFactory;
     }
 
     @FXML
     public void initialize() {
-        messageListView.setItems(messageList);
         roomsView.setRoot(root);
         appEventBus.subscribe(this.newRoomEventListener, AppEventType.MATRIX_NEW_EVENT_GOT);
         try {
@@ -60,8 +59,6 @@ public class MainLayoutController {
     }
 
     public void sendButtonHandler() {
-        if (messageList != null)
-            messageList.add(messageTyped.getText());
         messageTyped.clear();
     }
 
@@ -74,18 +71,21 @@ public class MainLayoutController {
         Optional<TreeItem<String>> roomIdNode = userIdNode.getChildren().stream()
                 .filter(node -> node.getValue().equals(roomKey.getRoomId()))
                 .findAny();
-        if (!roomIdNode.isPresent())
-            userIdNode.getChildren().add(new TreeItem<>(roomKey.getRoomId()));
-        roomsView.refresh();
-        MatrixEvent matrixEvent = appEvent.getPayload();
-        messageList.add(matrixEvent.toString());
-        messageListView.refresh();
+        if (!roomIdNode.isPresent()) {
+            attachNewRoom(userIdNode, roomKey);
+        }
     }
 
     private TreeItem<String> attachNewUserId(String userId) {
         TreeItem<String> userIdNode = new TreeItem<>(userId);
         root.getChildren().add(userIdNode);
         return userIdNode;
+    }
+
+    private void attachNewRoom(TreeItem<String> userIdNode, RoomKey roomKey) {
+        userIdNode.getChildren().add(new TreeItem<>(roomKey.getRoomId()));
+        Tab newRoomTab = viewFactory.produceChatTab(roomKey);
+        chatTabPane.getTabs().add(newRoomTab);
     }
 
 }

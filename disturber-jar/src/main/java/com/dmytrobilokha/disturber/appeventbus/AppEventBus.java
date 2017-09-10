@@ -1,7 +1,6 @@
 package com.dmytrobilokha.disturber.appeventbus;
 
 import javax.enterprise.context.ApplicationScoped;
-import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -13,8 +12,7 @@ import java.util.function.Consumer;
 @ApplicationScoped
 public class AppEventBus {
 
-    private final Thread initThread = Thread.currentThread();
-    private final Map<TypeClassifierKey, Set<WeakReference<AppEventListener>>> listenersMap = new HashMap<>();
+    private final Map<TypeClassifierKey, Set<CustomizedWeakReference<AppEventListener>>> listenersMap = new HashMap<>();
 
     public void subscribe(AppEventListener listener, AppEventType type) {
         subscribe(listener, type, null);
@@ -22,33 +20,42 @@ public class AppEventBus {
 
     public void subscribe(AppEventListener listener, AppEventType type, Object classifier) {
         TypeClassifierKey eventKey = new TypeClassifierKey(type, classifier);
-        Set<WeakReference<AppEventListener>> listeners = listenersMap.computeIfAbsent(eventKey, k -> new HashSet<>());
+        Set<CustomizedWeakReference<AppEventListener>> listeners = listenersMap.computeIfAbsent(eventKey, k -> new HashSet<>());
         cleanAndConsumeListeners(listeners, null);
-        listeners.add(new WeakReference<>(listener));
+        listeners.add(new CustomizedWeakReference<>(listener));
+    }
+
+    public void unsubscribe(AppEventListener listener, AppEventType type) {
+        unsubscribe(listener, type, null);
+    }
+
+    public void unsubscribe(AppEventListener listener, AppEventType type, Object classifier) {
+        TypeClassifierKey eventKey = new TypeClassifierKey(type, classifier);
+        Set<CustomizedWeakReference<AppEventListener>> listeners = listenersMap.get(eventKey);
+        if (listeners == null)
+            return;
+        listeners.remove(new CustomizedWeakReference<>(listener));
     }
 
     public void fire(AppEvent appEvent) {
-        if (initThread != Thread.currentThread())
-            throw new IllegalStateException("Event bus has been initialized from thread '" +  initThread
-                        + "', but appEvent is fired from another thread '" + Thread.currentThread() + '\'');
         TypeClassifierKey eventKey = TypeClassifierKey.of(appEvent);
-        Set<WeakReference<AppEventListener>> registeredListeners = listenersMap.get(eventKey);
+        Set<CustomizedWeakReference<AppEventListener>> registeredListeners = listenersMap.get(eventKey);
         notifyListeners(registeredListeners, appEvent);
         if (!eventKey.isGeneral()) {
-            Set<WeakReference<AppEventListener>> registeredGeneralListeners = listenersMap.get(eventKey.getGeneralized());
+            Set<CustomizedWeakReference<AppEventListener>> registeredGeneralListeners = listenersMap.get(eventKey.getGeneralized());
             notifyListeners(registeredGeneralListeners, appEvent);
         }
     }
 
-    private void notifyListeners(Set<WeakReference<AppEventListener>> registeredListeners, AppEvent appEvent) {
+    private void notifyListeners(Set<CustomizedWeakReference<AppEventListener>> registeredListeners, AppEvent appEvent) {
         cleanAndConsumeListeners(registeredListeners, listener -> listener.onAppEvent(appEvent));
     }
 
-    private void cleanAndConsumeListeners(Set<WeakReference<AppEventListener>> registeredListeners
+    private void cleanAndConsumeListeners(Set<CustomizedWeakReference<AppEventListener>> registeredListeners
             , Consumer<AppEventListener> consumer) {
         if (registeredListeners != null) {
-            Iterator<WeakReference<AppEventListener>> listenersIterator = registeredListeners.iterator();
-            while (listenersIterator.hasNext()) {
+            for (Iterator<CustomizedWeakReference<AppEventListener>> listenersIterator
+                 = registeredListeners.iterator(); listenersIterator.hasNext();) {
                 AppEventListener listener = getReferenceOrRemoveDead(listenersIterator);
                 if (consumer != null && listener != null) {
                     consumer.accept(listener);
@@ -57,7 +64,7 @@ public class AppEventBus {
         }
     }
 
-    private AppEventListener getReferenceOrRemoveDead(Iterator<WeakReference<AppEventListener>> iterator) {
+    private AppEventListener getReferenceOrRemoveDead(Iterator<CustomizedWeakReference<AppEventListener>> iterator) {
         AppEventListener listener = iterator.next().get();
         if (listener == null)
             iterator.remove();
