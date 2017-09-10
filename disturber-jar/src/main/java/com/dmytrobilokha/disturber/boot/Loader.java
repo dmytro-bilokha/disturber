@@ -1,8 +1,8 @@
 package com.dmytrobilokha.disturber.boot;
 
 import com.dmytrobilokha.disturber.Constants;
+import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
 import javafx.application.Application;
-import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
@@ -20,8 +20,6 @@ import java.util.Set;
 
 public class Loader extends Application {
 
-    private static final String MAIN_FXML = "/com/dmytrobilokha/disturber/viewcontroller/main/MainLayout.fxml";
-
     public static void main(String[] args) {
         launch(args);
     }
@@ -36,11 +34,8 @@ public class Loader extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
         System.out.println("Starting " + Constants.APPLICATION_NAME + "...");
-        FXMLLoader fxmlLoader = ContainerManager.getBeanByClass(FXMLLoader.class);
-        if (fxmlLoader == null)
-            throw new IllegalStateException("Failed to get FXMLLoader from ContainerManager");
-        fxmlLoader.setLocation(getClass().getResource(MAIN_FXML));
-        Parent panel = fxmlLoader.load();
+        ViewFactory viewFactory = ContainerManager.getBeanByClass(ViewFactory.class);
+        Parent panel = viewFactory.produceMainLayout();
         Scene scene = new Scene(panel, 600, 400);
         primaryStage.setTitle(Constants.APPLICATION_TITLE);
         primaryStage.setScene(scene);

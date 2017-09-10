@@ -3,7 +3,9 @@ package com.dmytrobilokha.disturber.viewcontroller;
 import com.dmytrobilokha.disturber.boot.FXMLLoaderProducer;
 import com.dmytrobilokha.disturber.viewcontroller.chattab.ChatTabController;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
+import com.dmytrobilokha.disturber.viewcontroller.main.MainLayoutController;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
 import javafx.scene.control.Tab;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +21,7 @@ import java.io.IOException;
 public class ViewFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(ViewFactory.class);
+    private static final String MAIN_LAYOUT_FXML = "main/MainLayout.fxml";
     private static final String CHAT_TAB_FXML = "chattab/ChatTab.fxml";
 
     private FXMLLoaderProducer fxmlLoaderProducer;
@@ -33,18 +36,37 @@ public class ViewFactory {
     }
 
     public Tab produceChatTab(RoomKey roomKey) {
+        ViewControllerHolder<Tab, ChatTabController> viewControllerHolder = load(CHAT_TAB_FXML);
+        viewControllerHolder.controller.setRoomToFollow(roomKey);
+        return viewControllerHolder.view;
+    }
+
+    public Parent produceMainLayout() {
+        ViewControllerHolder<Parent, MainLayoutController> viewControllerHolder = load(MAIN_LAYOUT_FXML);
+        return viewControllerHolder.view;
+    }
+
+    private <V, C> ViewControllerHolder<V, C> load(String fxmlLocation) {
         FXMLLoader fxmlLoader = fxmlLoaderProducer.produce();
-        fxmlLoader.setLocation(getClass().getResource(CHAT_TAB_FXML));
-        Tab chatTab;
+        fxmlLoader.setLocation(getClass().getResource(fxmlLocation));
         try {
-            chatTab = fxmlLoader.load();
-            ChatTabController chatTabController =  fxmlLoader.getController();
-            chatTabController.setRoomToFollow(roomKey);
+            V view = fxmlLoader.load();
+            C controller =  fxmlLoader.getController();
+            return new ViewControllerHolder<>(view, controller);
         } catch (IOException ex) {
-            LOG.error("Failed to load chat tab FXML for {} because of input/output error", roomKey, ex);
-            throw new RuntimeException("Failed to load chat tab FXML for " + roomKey + " because of input/output error");
+            LOG.error("Failed to load view {} because of internal error", fxmlLocation, ex);
+            throw new IllegalStateException("Failed to load view" + fxmlLocation + " because of internal error");
         }
-        return chatTab;
+    }
+
+    private static class ViewControllerHolder<V, C> {
+        private final V view;
+        private final C controller;
+
+        private ViewControllerHolder(V view, C controller) {
+            this.view = view;
+            this.controller = controller;
+        }
     }
 
 }
