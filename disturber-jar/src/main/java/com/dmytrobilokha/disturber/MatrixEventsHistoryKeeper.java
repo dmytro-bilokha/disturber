@@ -5,7 +5,7 @@ import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.appeventbus.AppEventListener;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.network.MatrixEvent;
-import com.dmytrobilokha.disturber.network.RoomKey;
+import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Initialized;

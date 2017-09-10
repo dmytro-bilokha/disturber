@@ -1,7 +1,8 @@
 package com.dmytrobilokha.disturber.view;
 
+import com.dmytrobilokha.disturber.boot.FXMLLoaderProducer;
 import com.dmytrobilokha.disturber.controller.ChatTabController;
-import com.dmytrobilokha.disturber.network.RoomKey;
+import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Tab;
 import org.slf4j.Logger;
@@ -21,18 +22,19 @@ public class ViewFactory {
     private static final String FXMLS_LOCATION = "/fxml/";
     private static final String CHAT_TAB_FXML = FXMLS_LOCATION + "ChatTab.fxml";
 
-    private FXMLLoader fxmlLoader;
+    private FXMLLoaderProducer fxmlLoaderProducer;
 
     protected ViewFactory() {
         //No args constructor to keep CDI framework happy
     }
 
     @Inject
-    public ViewFactory(FXMLLoader fxmlLoader) {
-        this.fxmlLoader = fxmlLoader;
+    public ViewFactory(FXMLLoaderProducer fxmlLoaderProducer) {
+        this.fxmlLoaderProducer = fxmlLoaderProducer;
     }
 
     public Tab produceChatTab(RoomKey roomKey) {
+        FXMLLoader fxmlLoader = fxmlLoaderProducer.produce();
         fxmlLoader.setLocation(getClass().getResource(CHAT_TAB_FXML));
         Tab chatTab;
         try {

@@ -8,7 +8,7 @@ import java.lang.ref.WeakReference;
  */
 public class CustomizedWeakReference<T> extends WeakReference<T> {
 
-    public CustomizedWeakReference(T referent) {
+    CustomizedWeakReference(T referent) {
         super(referent);
     }
 

@@ -5,22 +5,27 @@ import javafx.util.Callback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
 import javax.enterprise.inject.Produces;
 import javax.enterprise.inject.spi.Bean;
 import javax.enterprise.inject.spi.BeanManager;
-import javax.enterprise.inject.spi.InjectionPoint;
 import javax.inject.Inject;
 import java.util.ResourceBundle;
 
 /**
  * The producer to produce FXMLLoader with customized controller factory.
  */
+@ApplicationScoped
 public class FXMLLoaderProducer {
 
     private static final Logger LOG = LoggerFactory.getLogger(FXMLLoaderProducer.class);
 
-    private final BeanManager beanManager;
+    private BeanManager beanManager;
+
+    protected FXMLLoaderProducer() {
+        //No args constructor to keep CDI framework happy
+    }
 
     @Inject
     public FXMLLoaderProducer(BeanManager beanManager) {
@@ -30,7 +35,7 @@ public class FXMLLoaderProducer {
 
     @Produces
     @Dependent
-    public FXMLLoader produce(InjectionPoint injectionPoint) {
+    public FXMLLoader produce() {
         FXMLLoader fxmlLoader = new FXMLLoader();
         LOG.debug("Producer are going to produce FXMLLoader={}", fxmlLoader);
         fxmlLoader.setControllerFactory(new ControllerFactory());

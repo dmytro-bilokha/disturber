@@ -2,7 +2,7 @@ package com.dmytrobilokha.disturber.appeventbus;
 
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.network.MatrixEvent;
-import com.dmytrobilokha.disturber.network.RoomKey;
+import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 
 public enum AppEventType {
     MATRIX_NEW_EVENT_GOT(RoomKey.class, MatrixEvent.class)

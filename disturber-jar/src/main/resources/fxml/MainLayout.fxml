@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <?import javafx.scene.control.TabPane?>
-<AnchorPane fx:controller="com.dmytrobilokha.disturber.controller.MainLayoutController"
+<AnchorPane fx:controller="com.dmytrobilokha.disturber.controller.mainlayout.MainLayoutController"
             maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.82-ea" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <VBox AnchorPane.bottomAnchor="0" AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
@@ -40,7 +40,8 @@
               <items>
                 <AnchorPane minHeight="0.0" minWidth="0.0" AnchorPane.bottomAnchor="0" AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
                      <children>
-                        <TreeView fx:id="roomsView" AnchorPane.bottomAnchor="0" AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"/>
+                        <TreeView fx:id="roomsView" showRoot="false"
+                                  AnchorPane.bottomAnchor="0" AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"/>
                      </children>
                   </AnchorPane>
                 <AnchorPane minHeight="0.0" minWidth="0.0">

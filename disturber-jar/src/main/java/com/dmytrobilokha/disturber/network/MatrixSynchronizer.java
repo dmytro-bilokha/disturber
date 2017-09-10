@@ -2,6 +2,7 @@ package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
+import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.network.dto.EventDto;
 import com.dmytrobilokha.disturber.network.dto.JoinedRoomDto;

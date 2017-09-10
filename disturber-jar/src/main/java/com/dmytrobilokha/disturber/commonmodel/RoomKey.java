@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.network;
+package com.dmytrobilokha.disturber.commonmodel;
 
 import java.util.Objects;
 
@@ -10,11 +10,19 @@ public final class RoomKey {
     private final String userId;
     private final String roomId;
 
-    RoomKey(String userId, String roomId) {
+    public RoomKey(String userId) {
+        this(userId, null);
+    }
+
+    public RoomKey(String userId, String roomId) {
         if (userId == null)
             throw new IllegalArgumentException("UserId should not be null");
         this.userId = userId;
         this.roomId = roomId;
+    }
+
+    public boolean hasRoomId() {
+        return roomId != null;
     }
 
     public String getUserId() {
