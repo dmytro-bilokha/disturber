@@ -3,7 +3,7 @@ package com.dmytrobilokha.disturber.config.account;
 import com.dmytrobilokha.disturber.Constants;
 import com.dmytrobilokha.disturber.SystemMessage;
 import com.dmytrobilokha.disturber.config.property.PropertyService;
-import com.dmytrobilokha.disturber.service.fs.FsService;
+import com.dmytrobilokha.disturber.fs.FsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,7 +29,6 @@ import java.util.stream.Collectors;
 public class AccountConfigFactory {
 
     private static final String ACCOUNTS_FILE_NAME = "accounts.xml";
-
     private static final Logger LOG = LoggerFactory.getLogger(AccountConfigFactory.class);
 
     private Path accountsFilePath;

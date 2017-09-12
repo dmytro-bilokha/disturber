@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.service.fs;
+package com.dmytrobilokha.disturber.fs;
 
 /**
  * The class to replace standard JDK Consumer to be able to throw exception

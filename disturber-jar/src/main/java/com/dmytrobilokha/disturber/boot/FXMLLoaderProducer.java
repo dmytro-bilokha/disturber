@@ -2,8 +2,6 @@ package com.dmytrobilokha.disturber.boot;
 
 import javafx.fxml.FXMLLoader;
 import javafx.util.Callback;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.enterprise.context.Dependent;
@@ -19,8 +17,6 @@ import java.util.ResourceBundle;
 @ApplicationScoped
 public class FXMLLoaderProducer {
 
-    private static final Logger LOG = LoggerFactory.getLogger(FXMLLoaderProducer.class);
-
     private BeanManager beanManager;
 
     protected FXMLLoaderProducer() {
@@ -29,7 +25,6 @@ public class FXMLLoaderProducer {
 
     @Inject
     public FXMLLoaderProducer(BeanManager beanManager) {
-        LOG.info("FXMLLoaderProducer constructor called with beanManager={}", beanManager);
         this.beanManager = beanManager;
     }
 
@@ -37,7 +32,6 @@ public class FXMLLoaderProducer {
     @Dependent
     public FXMLLoader produce() {
         FXMLLoader fxmlLoader = new FXMLLoader();
-        LOG.debug("Producer are going to produce FXMLLoader={}", fxmlLoader);
         fxmlLoader.setControllerFactory(new ControllerFactory());
         fxmlLoader.setResources(ResourceBundle.getBundle("messages"));
         return fxmlLoader;

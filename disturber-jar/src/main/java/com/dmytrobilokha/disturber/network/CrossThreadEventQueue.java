@@ -9,7 +9,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 /**
  * The class represents container for events queue. It is accessed from worker threads and from the FX application thread
  */
-public final class CrossThreadEventQueue {
+final class CrossThreadEventQueue {
 
     private final Queue<AppEvent> eventQueue = new ConcurrentLinkedQueue<>();
     private final Runnable newEventCallback;

@@ -17,11 +17,10 @@ import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 
 /**
- * Created by dimon on 10.09.17.
+ * The class represents controller for the chat tab
  */
 @Dependent
 public class ChatTabController {
-
 
     private final AppEventListener<RoomKey, MatrixEvent> newEventHandler = this::onNewEvent;
     private final ObservableList<String> messageList = FXCollections.observableArrayList();

@@ -1,9 +1,9 @@
 package com.dmytrobilokha.disturber.config.account;
 
 import com.dmytrobilokha.disturber.config.property.PropertyService;
-import com.dmytrobilokha.disturber.service.fs.FsService;
-import com.dmytrobilokha.disturber.service.fs.ThrowingConsumer;
-import com.dmytrobilokha.disturber.service.fs.ThrowingFunction;
+import com.dmytrobilokha.disturber.fs.FsService;
+import com.dmytrobilokha.disturber.fs.ThrowingConsumer;
+import com.dmytrobilokha.disturber.fs.ThrowingFunction;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;

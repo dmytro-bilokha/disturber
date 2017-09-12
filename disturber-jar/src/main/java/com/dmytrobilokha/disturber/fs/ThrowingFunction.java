@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.service.fs;
+package com.dmytrobilokha.disturber.fs;
 
 /**
  * Function which can throw exception

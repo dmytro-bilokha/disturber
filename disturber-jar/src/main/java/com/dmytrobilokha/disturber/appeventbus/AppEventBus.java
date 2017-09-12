@@ -9,6 +9,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 
+/**
+ * The service to dispatch events between application components. Should be used only from FX application thread.
+ */
 @ApplicationScoped
 public class AppEventBus {
 
@@ -20,7 +23,8 @@ public class AppEventBus {
 
     public void subscribe(AppEventListener listener, AppEventType type, Object classifier) {
         TypeClassifierKey eventKey = new TypeClassifierKey(type, classifier);
-        Set<CustomizedWeakReference<AppEventListener>> listeners = listenersMap.computeIfAbsent(eventKey, k -> new HashSet<>());
+        Set<CustomizedWeakReference<AppEventListener>> listeners = listenersMap.computeIfAbsent(eventKey
+                , k -> new HashSet<>());
         cleanAndConsumeListeners(listeners, null);
         listeners.add(new CustomizedWeakReference<>(listener));
     }
@@ -42,7 +46,8 @@ public class AppEventBus {
         Set<CustomizedWeakReference<AppEventListener>> registeredListeners = listenersMap.get(eventKey);
         notifyListeners(registeredListeners, appEvent);
         if (!eventKey.isGeneral()) {
-            Set<CustomizedWeakReference<AppEventListener>> registeredGeneralListeners = listenersMap.get(eventKey.getGeneralized());
+            Set<CustomizedWeakReference<AppEventListener>> registeredGeneralListeners
+                    = listenersMap.get(eventKey.getGeneralized());
             notifyListeners(registeredGeneralListeners, appEvent);
         }
     }

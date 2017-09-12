@@ -20,9 +20,10 @@ import java.util.Map;
 import java.util.function.Function;
 
 /**
- * The class represents synchronizer which goal is to run Matrix Client
+ * The class represents synchronizer which should be run in the separate thread and synchronizes matrix events for
+ * given account.
  */
-public class MatrixSynchronizer extends Thread {
+class MatrixSynchronizer extends Thread {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixSynchronizer.class);
 

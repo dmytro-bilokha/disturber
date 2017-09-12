@@ -14,7 +14,8 @@ public class AccountConfig {
     private final int syncTimeout;
     private final int networkTimeout;
 
-    AccountConfig(String serverAddress, String login, String password, int betweenSyncPause, int syncTimeout, int networkTimeout) {
+    AccountConfig(String serverAddress, String login, String password, int betweenSyncPause
+            , int syncTimeout, int networkTimeout) {
         this.serverAddress = serverAddress;
         this.login = login;
         this.password = password;

@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.service.fs;
+package com.dmytrobilokha.disturber.fs;
 
 import javax.enterprise.context.ApplicationScoped;
 import java.io.BufferedInputStream;

@@ -18,6 +18,9 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.HashSet;
 import java.util.Set;
 
+/**
+ * The application entry point class. It does some initialization and on start checks.
+ */
 public class Loader extends Application {
 
     public static void main(String[] args) {
@@ -65,7 +68,7 @@ public class Loader extends Application {
     }
 
     private void checkConfigDirValid(Path configDirPath) {
-        String errorMessagePrefix ="Configuration directory '" + configDirPath + "' ";
+        String errorMessagePrefix = "Configuration directory '" + configDirPath + "' ";
         try {
             if (!Files.isReadable(configDirPath))
                 throw new IllegalStateException(errorMessagePrefix + "is not readable");
@@ -102,7 +105,8 @@ public class Loader extends Application {
     private void setLogfileLocation(String configDirLocation) {
         if (System.getProperty(Constants.LOGFILE_PROPERTY_KEY) != null)
             return;
-        System.setProperty(Constants.LOGFILE_PROPERTY_KEY, configDirLocation + Constants.FILE_SEPARATOR + Constants.APPLICATION_NAME + ".log");
+        System.setProperty(Constants.LOGFILE_PROPERTY_KEY
+                , configDirLocation + Constants.FILE_SEPARATOR + Constants.APPLICATION_NAME + ".log");
     }
 
 }

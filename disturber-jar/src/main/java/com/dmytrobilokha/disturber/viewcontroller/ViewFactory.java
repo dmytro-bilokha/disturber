@@ -15,7 +15,7 @@ import javax.inject.Inject;
 import java.io.IOException;
 
 /**
- * Created by dimon on 10.09.17.
+ * The factory to create views on-demand
  */
 @ApplicationScoped
 public class ViewFactory {

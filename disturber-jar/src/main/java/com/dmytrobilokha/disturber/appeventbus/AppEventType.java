@@ -4,6 +4,9 @@ import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.network.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 
+/**
+ * All application event types should be in this enumeration
+ */
 public enum AppEventType {
     MATRIX_NEW_EVENT_GOT(RoomKey.class, MatrixEvent.class)
     , MATRIX_LOGGEDIN(String.class, null)

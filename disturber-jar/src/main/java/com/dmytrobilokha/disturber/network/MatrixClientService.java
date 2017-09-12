@@ -3,7 +3,6 @@ package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
-import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.config.account.AccountConfigFactory;
@@ -14,8 +13,6 @@ import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * The service responsible for keeping in sync with Matrix accounts. It aggregates UI-related stuff with
@@ -25,7 +22,6 @@ import java.util.stream.Collectors;
 public class MatrixClientService {
 
     private final Map<AccountConfig, MatrixSynchronizer> connectedAccounts = new HashMap<>();
-    private final Map<RoomKey, List<String>> roomEventMap = new HashMap<>();
 
     private CrossThreadEventQueue eventQueue;
 
@@ -37,7 +33,7 @@ public class MatrixClientService {
     }
 
     @Inject
-    protected MatrixClientService(AccountConfigFactory accountConfigFactory, AppEventBus appEventBus
+    public MatrixClientService(AccountConfigFactory accountConfigFactory, AppEventBus appEventBus
             , RunLaterWrapper runLaterWrapper) {
         this.accountConfigFactory = accountConfigFactory;
         this.appEventBus = appEventBus;
@@ -53,13 +49,6 @@ public class MatrixClientService {
                 synchronizer.start();
             }
         }
-    }
-
-    public Map<String, Set<String>> getRoomsStructure() {
-        return roomEventMap.keySet().stream()
-                .collect(Collectors
-                        .groupingBy(RoomKey::getUserId
-                                , Collectors.mapping(RoomKey::getRoomId, Collectors.toSet())));
     }
 
     private void eventCallback() {

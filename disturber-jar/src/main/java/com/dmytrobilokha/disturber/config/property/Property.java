@@ -8,11 +8,8 @@ import static com.dmytrobilokha.disturber.Constants.NEW_LINE;
  * The enumeration represents application property
  */
 public enum Property {
-    COLOR("color", false, Type.STRING)
-    , NETWORK_SYNC_TIMEOUT("network.sync.timeout", true, Type.INTEGER)
-    , NETWORK_SYNC_INTERVAL("network.sync.interval", true, Type.INTEGER)
-    , PROPERTIES_VERSION("properties.version", true, Type.INTEGER)
-    , TEST_ENUM("enum", false, Type.PROPERTY2);
+    PROPERTIES_VERSION("properties.version", true, Type.INTEGER)
+    ;
 
     final String key;
     final boolean isMandatory;
@@ -66,7 +63,7 @@ public enum Property {
         STRING(String.class, string -> string)
         , INTEGER(Integer.class, Integer::valueOf)
         , BOOLEAN(Boolean.class, Boolean::valueOf)
-        , PROPERTY2(Property.class);
+        ;
 
         private final Class clazz;
         private final Function<String, Object> parser;

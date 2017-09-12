@@ -1,5 +1,8 @@
 package com.dmytrobilokha.disturber.appeventbus;
 
+/**
+ * The class represents application event container
+ */
 public final class AppEvent<K, T> {
 
     private final AppEventType type;
