@@ -1,5 +1,7 @@
 package com.dmytrobilokha.disturber.appeventbus;
 
+import java.util.Objects;
+
 /**
  * The class represents application event container
  */
@@ -55,4 +57,18 @@ public final class AppEvent<K, T> {
                 '}';
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AppEvent<?, ?> appEvent = (AppEvent<?, ?>) o;
+        return type == appEvent.type &&
+                Objects.equals(classifier, appEvent.classifier) &&
+                Objects.equals(payload, appEvent.payload);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, classifier);
+    }
 }

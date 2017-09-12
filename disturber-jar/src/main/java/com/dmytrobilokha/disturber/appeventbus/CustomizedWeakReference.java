@@ -14,12 +14,17 @@ public class CustomizedWeakReference<T> extends WeakReference<T> {
 
     @Override
     public int hashCode() {
-        return get().hashCode();
+        return get() == null ? 0 : get().hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        return get().equals(obj);
+        if (obj == null || this.getClass() != obj.getClass())
+            return false;
+        CustomizedWeakReference other = (CustomizedWeakReference) obj;
+        if (this.get() == null || other.get() == null)
+            return false;
+        return get().equals(other.get());
     }
 
 }
