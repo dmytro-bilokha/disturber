@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.network;
+package com.dmytrobilokha.disturber.commonmodel;
 
 import java.time.Instant;
 import java.time.LocalDateTime;

@@ -1,7 +1,7 @@
 package com.dmytrobilokha.disturber.appeventbus;
 
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
-import com.dmytrobilokha.disturber.network.MatrixEvent;
+import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 
 /**

@@ -6,7 +6,7 @@ import com.dmytrobilokha.disturber.appeventbus.AppEventListener;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.network.MatrixClientService;
-import com.dmytrobilokha.disturber.network.MatrixEvent;
+import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
 import javafx.fxml.FXML;
