@@ -5,7 +5,7 @@ import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
-import com.dmytrobilokha.disturber.config.account.AccountConfigFactory;
+import com.dmytrobilokha.disturber.config.account.AccountConfigService;
 
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
@@ -25,7 +25,7 @@ public class MatrixClientService {
 
     private CrossThreadEventQueue eventQueue;
 
-    private AccountConfigFactory accountConfigFactory;
+    private AccountConfigService accountConfigService;
     private AppEventBus appEventBus;
 
     protected MatrixClientService() {
@@ -33,15 +33,15 @@ public class MatrixClientService {
     }
 
     @Inject
-    public MatrixClientService(AccountConfigFactory accountConfigFactory, AppEventBus appEventBus
+    public MatrixClientService(AccountConfigService accountConfigService, AppEventBus appEventBus
             , RunLaterWrapper runLaterWrapper) {
-        this.accountConfigFactory = accountConfigFactory;
+        this.accountConfigService = accountConfigService;
         this.appEventBus = appEventBus;
         this.eventQueue = new CrossThreadEventQueue(runLaterWrapper.wrap(this::eventCallback));
     }
 
     public void connect() throws AccountConfigAccessException {
-        List<AccountConfig> configs = accountConfigFactory.getAccountConfigs();
+        List<AccountConfig> configs = accountConfigService.getAccountConfigs();
         for (AccountConfig accountConfig : configs) {
             if (!connectedAccounts.containsKey(accountConfig)) {
                 MatrixSynchronizer synchronizer = new MatrixSynchronizer(accountConfig, eventQueue, new MatrixApiConnector());

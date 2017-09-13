@@ -26,22 +26,22 @@ import java.util.stream.Collectors;
  * The factory responsible for providing accounts configuration
  */
 @ApplicationScoped
-public class AccountConfigFactory {
+public class AccountConfigService {
 
     private static final String ACCOUNTS_FILE_NAME = "accounts.xml";
-    private static final Logger LOG = LoggerFactory.getLogger(AccountConfigFactory.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AccountConfigService.class);
 
     private Path accountsFilePath;
     private List<AccountConfig> accountConfigs;
 
     private FsService fsService;
 
-    protected AccountConfigFactory() {
+    protected AccountConfigService() {
         //Empty no-args constructor to keep CDI framework happy
     }
 
     @Inject
-    public AccountConfigFactory(PropertyService propertyService, FsService fsService) {
+    public AccountConfigService(PropertyService propertyService, FsService fsService) {
         this.fsService = fsService;
         accountsFilePath = Paths.get(propertyService.getConfigDirLocation() + Constants.FILE_SEPARATOR + ACCOUNTS_FILE_NAME);
     }
