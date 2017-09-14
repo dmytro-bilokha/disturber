@@ -5,6 +5,7 @@ import java.util.Objects;
 /**
  * The class represents account settings
  */
+//TODO make this class final and add builder
 public class AccountConfig {
 
     private final String serverAddress;
