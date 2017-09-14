@@ -4,14 +4,12 @@ package com.dmytrobilokha.disturber.network;
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
-import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
-import com.dmytrobilokha.disturber.config.account.AccountConfigService;
 
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,26 +23,24 @@ public class MatrixClientService {
 
     private CrossThreadEventQueue eventQueue;
 
-    private AccountConfigService accountConfigService;
     private AppEventBus appEventBus;
+    private MatrixSynchronizerFactory synchronizerFactory;
 
     protected MatrixClientService() {
         //Empty no-args constructor to keep CDI framework happy
     }
 
     @Inject
-    public MatrixClientService(AccountConfigService accountConfigService, AppEventBus appEventBus
-            , RunLaterWrapper runLaterWrapper) {
-        this.accountConfigService = accountConfigService;
+    public MatrixClientService(AppEventBus appEventBus, MatrixSynchronizerFactory synchronizerFactory) {
         this.appEventBus = appEventBus;
-        this.eventQueue = new CrossThreadEventQueue(runLaterWrapper.wrap(this::eventCallback));
+        this.synchronizerFactory = synchronizerFactory;
+        this.eventQueue = synchronizerFactory.createCrossThreadEventQueue(this::eventCallback);
     }
 
-    public void connect() throws AccountConfigAccessException {
-        List<AccountConfig> configs = accountConfigService.getAccountConfigs();
-        for (AccountConfig accountConfig : configs) {
+    public void connect(Collection<AccountConfig> accountConfigs) {
+        for (AccountConfig accountConfig : accountConfigs) {
             if (!connectedAccounts.containsKey(accountConfig)) {
-                MatrixSynchronizer synchronizer = new MatrixSynchronizer(accountConfig, eventQueue, new MatrixApiConnector());
+                MatrixSynchronizer synchronizer = synchronizerFactory.createMatrixSynchronizer(accountConfig, eventQueue);
                 connectedAccounts.put(accountConfig, synchronizer);
                 synchronizer.start();
             }
@@ -59,7 +55,7 @@ public class MatrixClientService {
     }
 
     @PreDestroy
-    public void shutDown() {
+    void shutDown() {
         connectedAccounts.values().forEach(MatrixSynchronizer::disconnect);
     }
 

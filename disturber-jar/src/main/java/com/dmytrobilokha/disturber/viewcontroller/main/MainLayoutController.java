@@ -4,7 +4,9 @@ import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.appeventbus.AppEventListener;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
+import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
+import com.dmytrobilokha.disturber.config.account.AccountConfigService;
 import com.dmytrobilokha.disturber.network.MatrixClientService;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
@@ -19,6 +21,8 @@ import javafx.scene.control.TreeView;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
+import java.util.Collections;
+import java.util.List;
 
 /**
  * Controller for the main layout fxml
@@ -30,6 +34,7 @@ public class MainLayoutController {
     private final AppEventListener<RoomKey, MatrixEvent> newRoomEventListener = this::onMatrixEvent;
     private final MatrixClientService clientService;
     private final AppEventBus appEventBus;
+    private final AccountConfigService accountService;
     private final ViewFactory viewFactory;
 
     @FXML
@@ -40,9 +45,11 @@ public class MainLayoutController {
     private TextArea messageTyped;
 
     @Inject
-    public MainLayoutController(MatrixClientService clientService, AppEventBus appEventBus, ViewFactory viewFactory) {
+    public MainLayoutController(MatrixClientService clientService, AppEventBus appEventBus
+            , AccountConfigService accountService, ViewFactory viewFactory) {
         this.clientService = clientService;
         this.appEventBus = appEventBus;
+        this.accountService = accountService;
         this.viewFactory = viewFactory;
     }
 
@@ -70,12 +77,14 @@ public class MainLayoutController {
             return cell;
         });
         appEventBus.subscribe(this.newRoomEventListener, AppEventType.MATRIX_NEW_EVENT_GOT);
+        List<AccountConfig> accounts = Collections.emptyList();
         try {
-            clientService.connect();
+             accounts = accountService.getAccountConfigs();
         } catch (AccountConfigAccessException ex) {
             //TODO add normal error handling
             System.out.println("Failed to get account data:" + ex);
         }
+        clientService.connect(accounts);
     }
 
     public void sendButtonHandler() {
