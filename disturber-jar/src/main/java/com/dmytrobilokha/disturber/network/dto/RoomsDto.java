@@ -2,7 +2,6 @@ package com.dmytrobilokha.disturber.network.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import java.util.List;
 import java.util.Map;
 
 /**
