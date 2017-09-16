@@ -130,7 +130,6 @@ public class AccountConfigServiceTest {
         assertTrue(savedXml.contains("<betweenSyncPause>0</betweenSyncPause>"));
     }
 
-    @Ignore //TODO: implement accounts.xml validation against XSD for the test to pass
     @Test(expected = AccountConfigAccessException.class)
     public void testFailsOnInvalidXml() throws Exception {
         setupFsServiceMockReader("Invalid.xml");

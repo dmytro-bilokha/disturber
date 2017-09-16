@@ -12,4 +12,8 @@ public class AccountConfigAccessException extends ShowableException {
         super(systemMessage, ex);
     }
 
+    AccountConfigAccessException(SystemMessage systemMessage) {
+        super(systemMessage);
+    }
+
 }

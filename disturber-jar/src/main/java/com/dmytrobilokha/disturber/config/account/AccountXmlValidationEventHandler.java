@@ -12,11 +12,13 @@ import javax.xml.bind.ValidationEventLocator;
 class AccountXmlValidationEventHandler implements ValidationEventHandler {
 
     private final StringBuilder errorMessageBuilder = new StringBuilder();
+    private boolean errorDetected = false;
 
     AccountXmlValidationEventHandler() {}
 
     @Override
     public boolean handleEvent(ValidationEvent event) {
+        errorDetected = true;
         errorMessageBuilder
                 .append("MESSAGE: ")
                 .append(event.getMessage())
@@ -34,6 +36,10 @@ class AccountXmlValidationEventHandler implements ValidationEventHandler {
         }
         errorMessageBuilder.append(Constants.NEW_LINE);
         return true;
+    }
+
+    boolean isErrorDetected() {
+        return errorDetected;
     }
 
     String getErrorMessage() {
