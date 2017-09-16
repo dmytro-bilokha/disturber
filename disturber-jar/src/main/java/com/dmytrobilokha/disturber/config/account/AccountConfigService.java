@@ -84,13 +84,14 @@ public class AccountConfigService {
     }
 
     private AccountConfig mapDtoToConfig(AccountConfigDto configDto) {
-        return new AccountConfig(
-                configDto.getServerAddress()
-                , configDto.getLogin()
-                , configDto.getPassword()
-                , configDto.getBetweenSyncPause()
-                , configDto.getSyncTimeout()
-                , configDto.getNetworkTimeout());
+        return AccountConfig.newBuilder()
+                .serverAddress(configDto.getServerAddress())
+                .login(configDto.getLogin())
+                .password(configDto.getPassword())
+                .betweenSyncPause(configDto.getBetweenSyncPause())
+                .syncTimeout(configDto.getSyncTimeout())
+                .networkTimeout(configDto.getNetworkTimeout())
+                .build();
     }
 
     public void saveAccountConfigs(AccountsDto accountsDto) throws AccountConfigAccessException {

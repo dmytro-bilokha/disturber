@@ -2,6 +2,7 @@ package com.dmytrobilokha.disturber.network.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -10,11 +11,11 @@ import java.util.Map;
 public class RoomsDto {
 
     @JsonProperty(value = "leave", required = true)
-    private Map<String, LeftRoomDto> leftRoomMap;
+    private Map<String, LeftRoomDto> leftRoomMap = new HashMap<>();
     @JsonProperty(value = "join", required = true)
-    private Map<String, JoinedRoomDto> joinedRoomMap;
+    private Map<String, JoinedRoomDto> joinedRoomMap = new HashMap<>();
     @JsonProperty(value = "invite", required = true)
-    private Map<String, InvitedRoomDto> invitedRoomMap;
+    private Map<String, InvitedRoomDto> invitedRoomMap = new HashMap<>();
 
     public Map<String, LeftRoomDto> getLeftRoomMap() {
         return leftRoomMap;

@@ -1,5 +1,8 @@
 package com.dmytrobilokha.disturber.fs;
 
+import com.dmytrobilokha.disturber.util.ThrowingConsumer;
+import com.dmytrobilokha.disturber.util.ThrowingFunction;
+
 import javax.enterprise.context.ApplicationScoped;
 import java.io.BufferedInputStream;
 import java.io.IOException;

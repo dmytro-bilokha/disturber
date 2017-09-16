@@ -2,7 +2,7 @@ package com.dmytrobilokha.disturber.config.property;
 
 import com.dmytrobilokha.disturber.Constants;
 import com.dmytrobilokha.disturber.fs.FsService;
-import com.dmytrobilokha.disturber.fs.ThrowingConsumer;
+import com.dmytrobilokha.disturber.util.ThrowingConsumer;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;

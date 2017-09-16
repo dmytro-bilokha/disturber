@@ -10,15 +10,14 @@ import com.dmytrobilokha.disturber.network.dto.JoinedRoomDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
 import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
+import com.dmytrobilokha.disturber.util.ThrowingFunction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import retrofit2.Call;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 /**
  * The class represents synchronizer which should be run in the separate thread and synchronizes matrix events for
@@ -31,7 +30,7 @@ class MatrixSynchronizer extends Thread {
     private final AccountConfig accountConfig;
     private final CrossThreadEventQueue eventQueue;
     private final MatrixApiConnector apiConnector;
-    private final MatrixEvent.Builder matrixEventBuilder;
+    private final MatrixEvent.Builder matrixEventBuilder = MatrixEvent.newBuilder();
 
     private State state = State.NOT_CONNECTED;
     private String accessToken;
@@ -44,7 +43,6 @@ class MatrixSynchronizer extends Thread {
         this.accountConfig = accountConfig;
         this.eventQueue = eventQueue;
         this.apiConnector = apiConnector;
-        this.matrixEventBuilder = MatrixEvent.newBuilder();
     }
 
     @Override
@@ -97,7 +95,7 @@ class MatrixSynchronizer extends Thread {
         loginPasswordDto.setPassword(accountConfig.getPassword());
         LoginAnswerDto answerDto;
         try {
-            answerDto = apiConnector.issueRequest(matrixService -> matrixService.login(loginPasswordDto));
+            answerDto = apiConnector.login(loginPasswordDto);
         } catch (ApiConnectException ex) {
             LOG.error("Failed to login with {}", accountConfig, ex);
             addEvent(AppEvent.withClassifier(AppEventType.MATRIX_LOGIN_CONNECTION_FAILED, accountConfig));
@@ -126,7 +124,7 @@ class MatrixSynchronizer extends Thread {
     }
 
     private void initialSync() {
-        boolean success = sync(matrixService -> matrixService.sync(accessToken));
+        boolean success = sync(connector -> connector.sync(accessToken));
         if (success)
             state = State.INITIAL_SYNCED;
     }
@@ -135,10 +133,10 @@ class MatrixSynchronizer extends Thread {
         sync(matrixService -> matrixService.sync(accessToken, nextBatchId, accountConfig.getSyncTimeout()));
     }
 
-    private boolean sync(Function<MatrixService, Call<SyncResponseDto>> requestFunction) {
+    private boolean sync(ThrowingFunction<MatrixApiConnector, SyncResponseDto> requestFunction) {
         SyncResponseDto syncResponseDto;
         try {
-            syncResponseDto = apiConnector.issueRequest(requestFunction);
+            syncResponseDto = requestFunction.apply(apiConnector);
         } catch (ApiConnectException ex) {
             LOG.error("Failed to synchronize {} with server because of input/output error", accountConfig, ex);
             addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNC_CONNECTION_FAILED, userId));
@@ -146,6 +144,10 @@ class MatrixSynchronizer extends Thread {
         } catch (ApiRequestException ex) {
             LOG.error("Failed to synchronize {} with server, got {}", accountConfig, ex.getApiError(), ex);
             addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNC_FAILED, userId));
+            return false;
+        } catch (Exception ex) {
+            LOG.error("Failed to synchronize {} with server, got unexpected exception", accountConfig, ex);
+            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNC_CONNECTION_FAILED, userId));
             return false;
         }
         nextBatchId = syncResponseDto.getNextBatch();

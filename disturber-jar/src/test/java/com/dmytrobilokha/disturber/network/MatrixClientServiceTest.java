@@ -4,6 +4,7 @@ import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
+import com.dmytrobilokha.disturber.config.account.MockAccountConfigFactory;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -53,8 +54,8 @@ public class MatrixClientServiceTest {
 
     @Test
     public void testConnects() {
-        AccountConfig mockConfig1 = Mockito.mock(AccountConfig.class);
-        AccountConfig mockConfig2 = Mockito.mock(AccountConfig.class);
+        AccountConfig mockConfig1 = MockAccountConfigFactory.createMockAccountConfig("1");
+        AccountConfig mockConfig2 = MockAccountConfigFactory.createMockAccountConfig("2");
         clientService.connect(Arrays.asList(mockConfig1, mockConfig2));
         Mockito.verify(synchronizerFactory, Mockito.times(2)).createMatrixSynchronizer(Mockito.anyObject(), Mockito.anyObject());
         assertEquals(2, accountConfigsConnected.size());
@@ -66,8 +67,8 @@ public class MatrixClientServiceTest {
 
     @Test
     public void testConnectsOnlyOnce() {
-        AccountConfig mockConfig1 = Mockito.mock(AccountConfig.class);
-        AccountConfig mockConfig2 = Mockito.mock(AccountConfig.class);
+        AccountConfig mockConfig1 = MockAccountConfigFactory.createMockAccountConfig("1");
+        AccountConfig mockConfig2 = MockAccountConfigFactory.createMockAccountConfig("2");
         clientService.connect(Arrays.asList(mockConfig1, mockConfig2));
         clientService.connect(Arrays.asList(mockConfig2, mockConfig1));
         Mockito.verify(synchronizerFactory, Mockito.times(2)).createMatrixSynchronizer(Mockito.anyObject(), Mockito.anyObject());

@@ -1,6 +1,9 @@
 package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.network.dto.ErrorDto;
+import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
+import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
+import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
 import org.slf4j.Logger;
@@ -14,7 +17,6 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Function;
 
 /**
  * The class to create connection and issue network requests to the Matrix Server. Here should be implementations for
@@ -46,8 +48,19 @@ class MatrixApiConnector {
                 .build();
     }
 
-    <T> T issueRequest(Function<MatrixService, Call<T>> requestFunction) throws ApiRequestException, ApiConnectException {
-        Call<T> call = requestFunction.apply(matrixService);
+    LoginAnswerDto login(LoginPasswordDto loginPassword) throws ApiRequestException, ApiConnectException {
+        return callServer(matrixService.login(loginPassword));
+    }
+
+    SyncResponseDto sync(String accessToken) throws ApiRequestException, ApiConnectException {
+        return callServer(matrixService.sync(accessToken));
+    }
+
+    SyncResponseDto sync(String accessToken, String since, int timeout) throws ApiRequestException, ApiConnectException {
+        return callServer(matrixService.sync(accessToken, since, timeout));
+    }
+
+    private <T> T callServer(Call<T> call) throws ApiRequestException, ApiConnectException {
         Response<T> response;
         try {
             response = call.execute();

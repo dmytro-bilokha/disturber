@@ -5,8 +5,7 @@ import java.util.Objects;
 /**
  * The class represents account settings
  */
-//TODO make this class final and add builder
-public class AccountConfig {
+public final class AccountConfig {
 
     private final String serverAddress;
     private final String login;
@@ -15,14 +14,17 @@ public class AccountConfig {
     private final int syncTimeout;
     private final int networkTimeout;
 
-    AccountConfig(String serverAddress, String login, String password, int betweenSyncPause
-            , int syncTimeout, int networkTimeout) {
-        this.serverAddress = serverAddress;
-        this.login = login;
-        this.password = password;
-        this.betweenSyncPause = betweenSyncPause;
-        this.syncTimeout = syncTimeout;
-        this.networkTimeout = networkTimeout;
+    private AccountConfig(Builder builder) {
+        this.serverAddress = builder.serverAddress;
+        this.login = builder.login;
+        this.password = builder.password;
+        this.betweenSyncPause = builder.betweenSyncPause;
+        this.syncTimeout = builder.syncTimeout;
+        this.networkTimeout = builder.networkTimeout;
+    }
+
+    static Builder newBuilder() {
+        return new Builder();
     }
 
     public String getServerAddress() {
@@ -76,5 +78,49 @@ public class AccountConfig {
     @Override
     public int hashCode() {
         return Objects.hash(serverAddress, login);
+    }
+
+    static class Builder {
+        private String serverAddress;
+        private String login;
+        private String password;
+        private int betweenSyncPause;
+        private int syncTimeout;
+        private int networkTimeout;
+
+        Builder serverAddress(String serverAddress) {
+            this.serverAddress = serverAddress;
+            return this;
+        }
+
+        Builder login(String login) {
+            this.login = login;
+            return this;
+        }
+
+        Builder password(String password) {
+            this.password = password;
+            return this;
+        }
+
+        Builder betweenSyncPause(int betweenSyncPause) {
+            this.betweenSyncPause = betweenSyncPause;
+            return this;
+        }
+
+        Builder syncTimeout(int syncTimeout) {
+            this.syncTimeout = syncTimeout;
+            return this;
+        }
+
+        Builder networkTimeout(int networkTimeout) {
+            this.networkTimeout = networkTimeout;
+            return this;
+        }
+
+        AccountConfig build() {
+            return new AccountConfig(this);
+        }
+
     }
 }

@@ -2,6 +2,7 @@ package com.dmytrobilokha.disturber.network.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -10,7 +11,7 @@ import java.util.List;
 public class PresenceDto {
 
     @JsonProperty(value = "events", required = true)
-    List<EventDto> events;
+    List<EventDto> events = new ArrayList<>();
 
     public List<EventDto> getEvents() {
         return events;

@@ -2,8 +2,8 @@ package com.dmytrobilokha.disturber.config.account;
 
 import com.dmytrobilokha.disturber.config.property.PropertyService;
 import com.dmytrobilokha.disturber.fs.FsService;
-import com.dmytrobilokha.disturber.fs.ThrowingConsumer;
-import com.dmytrobilokha.disturber.fs.ThrowingFunction;
+import com.dmytrobilokha.disturber.util.ThrowingConsumer;
+import com.dmytrobilokha.disturber.util.ThrowingFunction;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -66,7 +66,15 @@ public class AccountConfigServiceTest {
         List<AccountConfig> configs = accountConfigService.getAccountConfigs();
         assertEquals(1, configs.size());
         AccountConfig config = configs.get(0);
-        assertEquals(new AccountConfig("address1", "login2", "password3", 1, 2, 3), config);
+        assertEquals(AccountConfig.newBuilder()
+                .serverAddress("address1")
+                .login("login2")
+                .password("password3")
+                .betweenSyncPause(1)
+                .syncTimeout(2)
+                .networkTimeout(3)
+                .build()
+                , config);
     }
 
     @Test
@@ -74,8 +82,24 @@ public class AccountConfigServiceTest {
         setupFsServiceMockReader("Two.xml");
         List<AccountConfig> configs = accountConfigService.getAccountConfigs();
         assertEquals(2, configs.size());
-        assertEquals(new AccountConfig("address11", "login12", "password13", 1, 2, 3), configs.get(0));
-        assertEquals(new AccountConfig("address21", "login22", "password23", 4, 5, 6), configs.get(1));
+        assertEquals(AccountConfig.newBuilder()
+                        .serverAddress("address11")
+                        .login("login12")
+                        .password("password13")
+                        .betweenSyncPause(1)
+                        .syncTimeout(2)
+                        .networkTimeout(3)
+                        .build()
+                , configs.get(0));
+        assertEquals(AccountConfig.newBuilder()
+                        .serverAddress("address21")
+                        .login("login22")
+                        .password("password23")
+                        .betweenSyncPause(4)
+                        .syncTimeout(5)
+                        .networkTimeout(6)
+                        .build()
+                , configs.get(1));
     }
 
     private void setupFsServiceMockReader(String resourceLocation) throws Exception {
