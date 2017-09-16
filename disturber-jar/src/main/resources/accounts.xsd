@@ -1,0 +1,32 @@
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+
+    <xs:element name="accounts">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="version" type="xs:int"/>
+                <xs:element ref="account" minOccurs="0" maxOccurs="unbounded"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="account">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="serverAddress" type="xs:anyURI"/>
+                <xs:element name="login" type="stringSize1To1024"/>
+                <xs:element name="password" type="stringSize1To1024"/>
+                <xs:element name="betweenSyncPause" type="xs:int"/>
+                <xs:element name="syncTimeout" type="xs:int"/>
+                <xs:element name="networkTimeout" type="xs:int"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:simpleType name="stringSize1To1024">
+        <xs:restriction base="xs:string">
+            <xs:maxLength value="1024"/>
+            <xs:minLength value="1"/>
+        </xs:restriction>
+    </xs:simpleType>
+
+</xs:schema>

@@ -6,13 +6,17 @@ import com.dmytrobilokha.disturber.config.property.PropertyService;
 import com.dmytrobilokha.disturber.fs.FsService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xml.sax.SAXException;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
+import javax.xml.XMLConstants;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.validation.Schema;
+import javax.xml.validation.SchemaFactory;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -29,6 +33,7 @@ import java.util.stream.Collectors;
 public class AccountConfigService {
 
     private static final String ACCOUNTS_FILE_NAME = "accounts.xml";
+    private static final String ACCOUNTS_XSD_RESOURCE = "/accounts.xsd";
     private static final Logger LOG = LoggerFactory.getLogger(AccountConfigService.class);
 
     private Path accountsFilePath;
@@ -60,18 +65,29 @@ public class AccountConfigService {
     }
 
     private AccountsDto unmarshalAccountsDto(Path accountsFilePath) throws AccountConfigAccessException {
+        AccountXmlValidationEventHandler validationEventHandler = new AccountXmlValidationEventHandler();
         try {
+            SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+            Schema accountsSchema = sf.newSchema(getClass().getResource(ACCOUNTS_XSD_RESOURCE));
             Unmarshaller unmarshaller = JAXBContext.newInstance(AccountsDto.class).createUnmarshaller();
+            unmarshaller.setSchema(accountsSchema);
+            unmarshaller.setEventHandler(validationEventHandler);
             return fsService.readFile(accountsFilePath
                     , reader -> (AccountsDto) unmarshaller.unmarshal(reader));
+        } catch (SAXException ex) {
+            LOG.error("Unable to create validation schema from internal file '{}'", ACCOUNTS_XSD_RESOURCE, ex);
+            throw new AccountConfigAccessException(
+                    new SystemMessage("account.config.load.exception.sax"), ex);
         } catch (IOException ex) {
             LOG.error("Unable to open and read accounts file '{}'", accountsFilePath, ex);
             throw new AccountConfigAccessException(
                     new SystemMessage("account.config.load.exception.io", accountsFilePath), ex);
         } catch (JAXBException ex) {
-            LOG.error("Failed to unmarshal accounts xml file '{}'", accountsFilePath, ex);
+            LOG.error("Failed to unmarshal accounts xml file '{}'. Following errors found: {}"
+                    , accountsFilePath, validationEventHandler.getErrorMessage(), ex);
             throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.load.exception.xml", accountsFilePath), ex);
+                    new SystemMessage("account.config.load.exception.xml", accountsFilePath
+                            , validationEventHandler.getErrorMessage()), ex);
         } catch (Exception ex) {
             LOG.error("Unexpected exception during reading accounts file {}", accountsFilePath, ex);
             throw new AccountConfigAccessException(
