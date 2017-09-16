@@ -3,6 +3,7 @@ package com.dmytrobilokha.disturber.commonmodel;
 import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Objects;
 
 /**
  * The class represents Matrix event
@@ -39,6 +40,22 @@ public final class MatrixEvent {
 
     public LocalDateTime getServerTimestamp() {
         return serverTimestamp;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MatrixEvent event = (MatrixEvent) o;
+        return Objects.equals(sender, event.sender) &&
+                Objects.equals(contentType, event.contentType) &&
+                Objects.equals(content, event.content) &&
+                Objects.equals(serverTimestamp, event.serverTimestamp);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sender, contentType, content);
     }
 
     @Override

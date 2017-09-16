@@ -65,8 +65,10 @@ class MatrixSynchronizer extends Thread {
                     stepSync();
                     break;
             }
-            if (haveNewEvents)
+            if (haveNewEvents) {
                 eventQueue.triggerEventCallback();
+                haveNewEvents = false;
+            }
             if (!keepGoing) //Check keepGoing flag once again to make app more responsive in case of shut down
                 break;
             try {

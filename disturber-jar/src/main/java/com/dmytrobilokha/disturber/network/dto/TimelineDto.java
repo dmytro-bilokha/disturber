@@ -2,6 +2,7 @@ package com.dmytrobilokha.disturber.network.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,7 +15,7 @@ public class TimelineDto {
     @JsonProperty(value = "prev_batch", required = true)
     private String previousBatch;
     @JsonProperty(value = "events", required = true)
-    private List<EventDto> events;
+    private List<EventDto> events = new ArrayList<>();
 
     public Boolean getLimited() {
         return limited;
