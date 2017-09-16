@@ -67,15 +67,13 @@ public class AccountConfigService {
     private AccountsDto unmarshalAccountsDto(Path accountsFilePath) throws AccountConfigAccessException {
         AccountXmlValidationEventHandler validationEventHandler = new AccountXmlValidationEventHandler();
         try {
-            SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
-            Schema accountsSchema = sf.newSchema(getClass().getResource(ACCOUNTS_XSD_RESOURCE));
             Unmarshaller unmarshaller = JAXBContext.newInstance(AccountsDto.class).createUnmarshaller();
-            unmarshaller.setSchema(accountsSchema);
+            unmarshaller.setSchema(getAccountSchema());
             unmarshaller.setEventHandler(validationEventHandler);
             return fsService.readFile(accountsFilePath
                     , reader -> (AccountsDto) unmarshaller.unmarshal(reader));
         } catch (SAXException ex) {
-            LOG.error("Unable to create validation schema from internal file '{}'", ACCOUNTS_XSD_RESOURCE, ex);
+            LOG.error("Unable to create validation schema from internal resource '{}'", ACCOUNTS_XSD_RESOURCE, ex);
             throw new AccountConfigAccessException(
                     new SystemMessage("account.config.load.exception.sax"), ex);
         } catch (IOException ex) {
@@ -95,6 +93,11 @@ public class AccountConfigService {
         }
     }
 
+    private Schema getAccountSchema() throws SAXException {
+        SchemaFactory sf = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);
+        return sf.newSchema(getClass().getResource(ACCOUNTS_XSD_RESOURCE));
+    }
+
     private List<AccountConfig> convertDtosToConfig(Collection<AccountConfigDto> configDtos) {
         return configDtos.stream().map(this::mapDtoToConfig).collect(Collectors.toList());
     }
@@ -111,17 +114,25 @@ public class AccountConfigService {
     }
 
     public void saveAccountConfigs(AccountsDto accountsDto) throws AccountConfigAccessException {
+        AccountXmlValidationEventHandler validationEventHandler = new AccountXmlValidationEventHandler();
         try {
             Marshaller marshaller = JAXBContext.newInstance(AccountsDto.class).createMarshaller();
+            marshaller.setSchema(getAccountSchema());
+            marshaller.setEventHandler(validationEventHandler);
             marshaller.setProperty("jaxb.formatted.output", Boolean.TRUE);
             fsService.writeFile(accountsFilePath
                     , writer -> marshaller.marshal(accountsDto, writer));
+        } catch (SAXException ex) {
+            LOG.error("Unable to create validation schema from internal resource '{}'", ACCOUNTS_XSD_RESOURCE, ex);
+            throw new AccountConfigAccessException(
+                    new SystemMessage("account.config.save.exception.sax"), ex);
         } catch (IOException ex) {
             LOG.error("Failed to save {} to file {}", accountsDto, accountsFilePath, ex);
             throw new AccountConfigAccessException(
                     new SystemMessage("account.config.save.exception.io", accountsFilePath), ex);
         } catch (JAXBException ex) {
-            LOG.error("XML marshalling exception during saving {} to file {}", accountsDto, accountsFilePath, ex);
+            LOG.error("XML marshalling exception during saving {} to file {}. Following errors found: {}"
+                    , accountsDto, accountsFilePath, validationEventHandler.getErrorMessage(), ex);
             throw new AccountConfigAccessException(
                     new SystemMessage("account.config.save.exception.xml", accountsFilePath), ex);
         } catch (Exception ex) {
