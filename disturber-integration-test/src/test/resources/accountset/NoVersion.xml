@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<accounts>
+    <account>
+        <serverAddress>address1</serverAddress>
+        <login>login2</login>
+        <password>password3</password>
+        <betweenSyncPause>1</betweenSyncPause>
+        <syncTimeout>2</syncTimeout>
+        <networkTimeout>3</networkTimeout>
+    </account>
+</accounts>

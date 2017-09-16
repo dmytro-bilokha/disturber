@@ -137,6 +137,12 @@ public class AccountConfigServiceTest {
     }
 
     @Test(expected = AccountConfigAccessException.class)
+    public void testVersionInXmlIsMandatory() throws Exception {
+        setupFsServiceMockReader("NoVersion.xml");
+        List<AccountConfig> configs = accountConfigService.getAccountConfigs();
+    }
+
+    @Test(expected = AccountConfigAccessException.class)
     public void testFailsOnIOException() throws Exception {
         setupMockFsServiceFail(new IOException());
         accountConfigService.getAccountConfigs();
