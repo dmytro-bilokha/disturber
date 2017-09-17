@@ -14,6 +14,7 @@ public enum AppEventType {
     , MATRIX_LOGIN_FAILED(AccountConfig.class, null)
     , MATRIX_SYNC_CONNECTION_FAILED(String.class, null)
     , MATRIX_SYNC_FAILED(String.class, null)
+    , MATRIX_OUTGOING_MESSAGE(RoomKey.class, String.class)
     ;
 
     private final Class classifierClass;

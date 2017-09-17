@@ -1,5 +1,7 @@
 package com.dmytrobilokha.disturber.config.account;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.Objects;
 
 /**
@@ -7,6 +9,7 @@ import java.util.Objects;
  */
 public final class AccountConfig {
 
+    private final String userId;
     private final String serverAddress;
     private final String login;
     private final String password;
@@ -15,6 +18,7 @@ public final class AccountConfig {
     private final int networkTimeout;
 
     private AccountConfig(Builder builder) {
+        this.userId = builder.userId;
         this.serverAddress = builder.serverAddress;
         this.login = builder.login;
         this.password = builder.password;
@@ -25,6 +29,10 @@ public final class AccountConfig {
 
     static Builder newBuilder() {
         return new Builder();
+    }
+
+    public String getUserId() {
+        return userId;
     }
 
     public String getServerAddress() {
@@ -54,6 +62,7 @@ public final class AccountConfig {
     @Override
     public String toString() {
         return "AccountConfig{" +
+                "userId='" + userId + '\'' +
                 "serverAddress='" + serverAddress + '\'' +
                 ", login='" + login + '\'' +
                 ", betweenSyncPause=" + betweenSyncPause +
@@ -81,6 +90,7 @@ public final class AccountConfig {
     }
 
     static class Builder {
+        private String userId;
         private String serverAddress;
         private String login;
         private String password;
@@ -118,7 +128,16 @@ public final class AccountConfig {
             return this;
         }
 
+        private String buildUserId() throws MalformedURLException {
+            return "@" + login + ':' + new URL(serverAddress).getHost();
+        }
+
         AccountConfig build() {
+            try {
+                userId = buildUserId();
+            } catch (MalformedURLException ex) {
+                throw new IllegalStateException("Failed to build userId from serverAddress='" + serverAddress + '\'', ex);
+            }
             return new AccountConfig(this);
         }
 
