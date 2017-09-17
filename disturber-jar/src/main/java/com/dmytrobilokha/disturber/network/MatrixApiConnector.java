@@ -49,14 +49,23 @@ class MatrixApiConnector {
     }
 
     LoginAnswerDto login(LoginPasswordDto loginPassword) throws ApiRequestException, ApiConnectException {
+        validateConnection();
         return callServer(matrixService.login(loginPassword));
     }
 
+    private void validateConnection() {
+        if (matrixService == null) {
+            throw new IllegalStateException("API misuse detected. First the connection should be created");
+        }
+    }
+
     SyncResponseDto sync(String accessToken) throws ApiRequestException, ApiConnectException {
+        validateConnection();
         return callServer(matrixService.sync(accessToken));
     }
 
     SyncResponseDto sync(String accessToken, String since, int timeout) throws ApiRequestException, ApiConnectException {
+        validateConnection();
         return callServer(matrixService.sync(accessToken, since, timeout));
     }
 
