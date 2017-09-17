@@ -1,7 +1,9 @@
 package com.dmytrobilokha.disturber.network;
 
+import com.dmytrobilokha.disturber.network.dto.EventContentDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
+import com.dmytrobilokha.disturber.network.dto.SendEventResponseDto;
 import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
 import org.junit.AfterClass;
 import org.junit.Before;
@@ -130,6 +132,31 @@ public class MatrixApiConnectorTest {
         assertEquals(syncUri, requestCapture.getUri());
         assertNotNull(syncResponseDto);
         assertEquals("s72595_4483_1934", syncResponseDto.getNextBatch());
+    }
+
+    @Test
+    public void testSendsTextMessage() throws URISyntaxException, ApiConnectException, ApiRequestException {
+        URI sendMessageUri = new URI("/_matrix/client/r0/rooms/!636q39766251:example.com/send/m.room.message/1?access_token=ACCESS_TOKEN");
+        httpServerMock.setUriMock(sendMessageUri, new HttpServerMock.Response(200, JSONSET_BASE + "sendMessage.json"));
+        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT);
+        EventContentDto contentDto = new EventContentDto();
+        contentDto.setBody("Hello World");
+        contentDto.setMsgType("msg.text");
+        SendEventResponseDto sendEventResponseDto = apiConnector.sendMessageEvent(
+                "ACCESS_TOKEN"
+                , "!636q39766251:example.com"
+                , "m.room.message"
+                , "1"
+                , contentDto);
+        HttpServerMock.RequestCapture requestCapture = httpServerMock.getRequestCapture();
+        assertNotNull(requestCapture);
+        assertEquals("PUT", requestCapture.getMethod());
+        assertEquals(sendMessageUri, requestCapture.getUri());
+        String requestJson = requestCapture.getBody();
+        assertTrue(isJsonFieldPresent(requestJson, "body", "Hello World"));
+        assertTrue(isJsonFieldPresent(requestJson, "msgtype", "msg.text"));
+        assertNotNull(sendEventResponseDto);
+        assertEquals("EVENT_ID", sendEventResponseDto.getEventId());
     }
 
 }

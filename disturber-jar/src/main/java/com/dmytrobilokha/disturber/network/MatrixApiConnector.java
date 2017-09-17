@@ -1,8 +1,10 @@
 package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.network.dto.ErrorDto;
+import com.dmytrobilokha.disturber.network.dto.EventContentDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
+import com.dmytrobilokha.disturber.network.dto.SendEventResponseDto;
 import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
@@ -67,6 +69,12 @@ class MatrixApiConnector {
     SyncResponseDto sync(String accessToken, String since, int timeout) throws ApiRequestException, ApiConnectException {
         validateConnection();
         return callServer(matrixService.sync(accessToken, since, timeout));
+    }
+
+    SendEventResponseDto sendMessageEvent(String accessToken, String roomId, String eventType, String txnId
+            , EventContentDto eventContentDto) throws ApiRequestException, ApiConnectException {
+        validateConnection();
+        return callServer(matrixService.sendMessageEvent(roomId, eventType, txnId, accessToken, eventContentDto));
     }
 
     private <T> T callServer(Call<T> call) throws ApiRequestException, ApiConnectException {

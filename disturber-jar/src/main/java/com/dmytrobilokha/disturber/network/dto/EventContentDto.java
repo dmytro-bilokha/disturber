@@ -1,6 +1,7 @@
 package com.dmytrobilokha.disturber.network.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
@@ -10,6 +11,7 @@ import java.util.List;
  * The class represents event content DTO
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EventContentDto {
 
     @JsonProperty(value = "membership", required = false)
@@ -18,8 +20,6 @@ public class EventContentDto {
     private String name;
     @JsonProperty(value = "presence", required = false)
     private String presence;
-    @JsonProperty(value = "custom_config_key", required = false)
-    private String customConfig; //TODO: investigate how to handle unknown properties in the content???
     @JsonProperty(value = "body", required = false)
     private String body;
     @JsonProperty(value = "msgtype", required = false)
@@ -49,14 +49,6 @@ public class EventContentDto {
 
     public void setPresence(String presence) {
         this.presence = presence;
-    }
-
-    public String getCustomConfig() {
-        return customConfig;
-    }
-
-    public void setCustomConfig(String customConfig) {
-        this.customConfig = customConfig;
     }
 
     public String getBody() {
