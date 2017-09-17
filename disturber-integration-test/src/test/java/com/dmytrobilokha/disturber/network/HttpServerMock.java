@@ -32,6 +32,7 @@ public class HttpServerMock {
     private volatile RequestCapture requestCapture;
 
     public HttpServerMock(String context, int port) throws IOException {
+        LOG.info("Creating mock HTTP server on port {}...", port);
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext(context, new Handler());
     }

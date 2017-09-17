@@ -2,13 +2,17 @@ package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
+import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.Arrays;
+import java.util.Random;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
@@ -17,10 +21,13 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
-//TODO implement port randomizing with retries and implement sync() tests
 public class MatrixApiConnectorTest {
 
-    private static final String BASE_URL = "http://localhost:64444/";
+    private static final int MAX_TRY = 5;
+    private static final int PORT_FROM = 30000;
+    private static final int PORT_TO = 65500;
+    private static final String LOCALHOST = "http://localhost:";
+    private static String baseUrl;
     private static final String SYNC_PATH = "_matrix/client/r0/sync";
     private static final String LOGIN_PATH = "_matrix/client/r0/login";
     private static final String JSONSET_BASE = "/jsonset/";
@@ -31,8 +38,23 @@ public class MatrixApiConnectorTest {
     private MatrixApiConnector apiConnector;
 
     @BeforeClass
-    public static void setupServer() throws Exception {
-        httpServerMock = new HttpServerMock("/", 64444);
+    public static void setupServer() {
+        Random portRandom = new Random(System.nanoTime());
+        int tryNumber = 1;
+        int[] portsTried = new int[MAX_TRY];
+        while (httpServerMock == null && tryNumber <= MAX_TRY) {
+            int portNumSuggested = portRandom.nextInt(PORT_TO - PORT_FROM) + PORT_FROM;
+            portsTried[tryNumber - 1] = portNumSuggested;
+            try {
+                httpServerMock = new HttpServerMock("/", portNumSuggested);
+                baseUrl = LOCALHOST + portNumSuggested + '/';
+            } catch (IOException ex) {
+                tryNumber++;
+            }
+        }
+        if (httpServerMock == null)
+            throw new IllegalStateException("Tried " + tryNumber
+                    + " times, but failed to start mock http server. Port tried: " + Arrays.toString(portsTried));
         httpServerMock.start();
     }
 
@@ -54,7 +76,7 @@ public class MatrixApiConnectorTest {
         LoginPasswordDto loginPasswordDto = new LoginPasswordDto();
         loginPasswordDto.setLogin("MY_LOGIN");
         loginPasswordDto.setPassword("MY_PASSWORD");
-        apiConnector.createConnection(BASE_URL, NETWORK_TIMEOUT);
+        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT);
         LoginAnswerDto loginAnswerDto = apiConnector.login(loginPasswordDto);
         HttpServerMock.RequestCapture requestCapture = httpServerMock.getRequestCapture();
         assertNotNull(requestCapture);
@@ -76,7 +98,7 @@ public class MatrixApiConnectorTest {
         LoginPasswordDto loginPasswordDto = new LoginPasswordDto();
         loginPasswordDto.setLogin("MY_LOGIN");
         loginPasswordDto.setPassword("MY_PASSWORD");
-        apiConnector.createConnection(BASE_URL, NETWORK_TIMEOUT);
+        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT);
         try {
             LoginAnswerDto loginAnswerDto = apiConnector.login(loginPasswordDto);
         } catch (ApiRequestException ex) {
@@ -94,6 +116,20 @@ public class MatrixApiConnectorTest {
     private boolean isJsonFieldPresent(String jsonString, String fieldName, String fieldValue) {
         String pattern = ".*\"" + fieldName + "\" *: *\"" + fieldValue + "\".*";
         return Pattern.matches(pattern, jsonString);
+    }
+
+    @Test
+    public void testSynchronizesInGeneral() throws URISyntaxException, ApiConnectException, ApiRequestException {
+        URI syncUri = new URI("/" + SYNC_PATH + "?access_token=ACCESS_TOKEN");
+        httpServerMock.setUriMock(syncUri, new HttpServerMock.Response(200, JSONSET_BASE + "sync.json"));
+        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT);
+        SyncResponseDto syncResponseDto = apiConnector.sync("ACCESS_TOKEN");
+        HttpServerMock.RequestCapture requestCapture = httpServerMock.getRequestCapture();
+        assertNotNull(requestCapture);
+        assertEquals("GET", requestCapture.getMethod());
+        assertEquals(syncUri, requestCapture.getUri());
+        assertNotNull(syncResponseDto);
+        assertEquals("s72595_4483_1934", syncResponseDto.getNextBatch());
     }
 
 }
