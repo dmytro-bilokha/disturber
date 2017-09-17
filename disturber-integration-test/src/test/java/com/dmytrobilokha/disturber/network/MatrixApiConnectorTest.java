@@ -8,12 +8,16 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+//TODO implement port randomizing with retries and implement sync() tests
 public class MatrixApiConnectorTest {
 
     private static final String BASE_URL = "http://localhost:64444/";
@@ -46,7 +50,7 @@ public class MatrixApiConnectorTest {
     @Test
     public void testLogsIn() throws Exception {
         URI loginUri = new URI("/" + LOGIN_PATH);
-        httpServerMock.setUriMock(loginUri, JSONSET_BASE + "login.json");
+        httpServerMock.setUriMock(loginUri, new HttpServerMock.Response(200, JSONSET_BASE + "login.json"));
         LoginPasswordDto loginPasswordDto = new LoginPasswordDto();
         loginPasswordDto.setLogin("MY_LOGIN");
         loginPasswordDto.setPassword("MY_PASSWORD");
@@ -63,6 +67,28 @@ public class MatrixApiConnectorTest {
         assertTrue(isJsonFieldPresent(requestBody, "type", "m.login.password"));
         assertNotNull(loginAnswerDto);
         assertEquals("SECURE_TOKEN", loginAnswerDto.getAccessToken());
+    }
+
+    @Test
+    public void testHandlesLoginFail() throws URISyntaxException {
+        URI loginUri = new URI("/" + LOGIN_PATH);
+        httpServerMock.setUriMock(loginUri, new HttpServerMock.Response(403, JSONSET_BASE + "login403.json"));
+        LoginPasswordDto loginPasswordDto = new LoginPasswordDto();
+        loginPasswordDto.setLogin("MY_LOGIN");
+        loginPasswordDto.setPassword("MY_PASSWORD");
+        apiConnector.createConnection(BASE_URL, NETWORK_TIMEOUT);
+        try {
+            LoginAnswerDto loginAnswerDto = apiConnector.login(loginPasswordDto);
+        } catch (ApiRequestException ex) {
+            ApiError apiError = ex.getApiError();
+            assertNotNull(apiError);
+            assertEquals(403, apiError.getNetworkCode());
+            assertEquals("M_FORBIDDEN", apiError.getErrorCode());
+            assertNull(apiError.getErrorMessage());
+        } catch (ApiConnectException ex) {
+            fail("On failed login with 403 response code, connector should throw ApiRequesException");
+        }
+
     }
 
     private boolean isJsonFieldPresent(String jsonString, String fieldName, String fieldValue) {

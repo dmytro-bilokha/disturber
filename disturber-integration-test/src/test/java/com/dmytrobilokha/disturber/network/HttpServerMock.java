@@ -28,7 +28,7 @@ public class HttpServerMock {
     private static final Logger LOG = LoggerFactory.getLogger(HttpServerMock.class);
 
     private final HttpServer server;
-    private final Map<URI, String> requestUriToOutputResourceMap = new ConcurrentHashMap<>();
+    private final Map<URI, Response> requestUriToOutputResourceMap = new ConcurrentHashMap<>();
     private volatile RequestCapture requestCapture;
 
     public HttpServerMock(String context, int port) throws IOException {
@@ -44,8 +44,8 @@ public class HttpServerMock {
         server.stop(1);
     }
 
-    public HttpServerMock setUriMock(URI requestUri, String mockResource) {
-        requestUriToOutputResourceMap.put(requestUri, mockResource);
+    public HttpServerMock setUriMock(URI requestUri, Response mockResponse) {
+        requestUriToOutputResourceMap.put(requestUri, mockResponse);
         return this;
     }
 
@@ -66,20 +66,20 @@ public class HttpServerMock {
             URI requestUri = httpExchange.getRequestURI();
             requestCapture = new RequestCapture(requestUri
                     , httpExchange.getRequestMethod(), extractRequestBody(httpExchange));
-            String resource = requestUriToOutputResourceMap.get(requestUri);
-            if (resource == null) {
+            Response mockResponse = requestUriToOutputResourceMap.get(requestUri);
+            if (mockResponse == null) {
                 LOG.error("Requested URI {} has no corresponding mock json set", requestUri);
                 throw new IllegalStateException("Requested URI " + requestUri + " has no corresponding mock json set");
             }
             URI resourceUri = null;
             try {
-                resourceUri = getClass().getResource(resource).toURI();
+                resourceUri = getClass().getResource(mockResponse.resource).toURI();
             } catch (URISyntaxException e) {
-                LOG.error("Unable to get classpath resource {}", resource);
-                throw new IllegalStateException("Unable to get resource '" + resource + '\'');
+                LOG.error("Unable to get classpath resource {}", mockResponse.resource);
+                throw new IllegalStateException("Unable to get resource '" + mockResponse.resource + '\'');
             }
             Path resourcePath = Paths.get(resourceUri);
-            httpExchange.sendResponseHeaders(200, Files.size(resourcePath));
+            httpExchange.sendResponseHeaders(mockResponse.statusCode, Files.size(resourcePath));
             OutputStream os = httpExchange.getResponseBody();
             Files.copy(resourcePath, os);
             os.close();
@@ -116,6 +116,16 @@ public class HttpServerMock {
 
         public String getBody() {
             return body;
+        }
+    }
+
+    public static class Response {
+        private final int statusCode;
+        private final String resource;
+
+        public Response(int statusCode, String resource) {
+            this.statusCode = statusCode;
+            this.resource = resource;
         }
     }
 }

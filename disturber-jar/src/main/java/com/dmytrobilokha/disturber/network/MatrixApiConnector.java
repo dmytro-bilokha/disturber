@@ -36,7 +36,7 @@ class MatrixApiConnector {
                 .client(buildConfiguredHttpClient(networkTimeout))
                 .build();
         matrixService = retrofit.create(MatrixService.class);
-        errorConverter = retrofit.responseBodyConverter(ApiError.class, new Annotation[0]);
+        errorConverter = retrofit.responseBodyConverter(ErrorDto.class, new Annotation[0]);
     }
 
     private OkHttpClient buildConfiguredHttpClient(int networkTimeout) {
