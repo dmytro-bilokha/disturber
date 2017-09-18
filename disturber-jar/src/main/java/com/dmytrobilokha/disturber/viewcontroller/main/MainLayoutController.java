@@ -95,6 +95,11 @@ public class MainLayoutController {
     }
 
     public void sendButtonHandler() {
+        String text = messageTyped.getText();
+        if (currentRoom == null || text.isEmpty())
+            return;
+        appEventBus.fire(AppEvent
+                .withClassifierAndPayload(AppEventType.MATRIX_OUTGOING_MESSAGE, currentRoom, text));
         messageTyped.clear();
     }
 
