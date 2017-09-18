@@ -1,5 +1,6 @@
 package com.dmytrobilokha.disturber.viewcontroller.main;
 
+import com.dmytrobilokha.disturber.MatrixEventsHistoryKeeper;
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.appeventbus.AppEventListener;
@@ -10,10 +11,10 @@ import com.dmytrobilokha.disturber.config.account.AccountConfigService;
 import com.dmytrobilokha.disturber.network.MatrixClientService;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
-import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.Tab;
-import javafx.scene.control.TabPane;
+import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
@@ -23,38 +24,44 @@ import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Controller for the main layout fxml
  */
+//TODO: implement different style for active room to distinguish it.
 @Dependent
 public class MainLayoutController {
 
     private final TreeItem<RoomKey> root = new TreeItem<>();
+    private final ObservableList<String> messageList = FXCollections.observableArrayList();
     private final AppEventListener<RoomKey, MatrixEvent> newRoomEventListener = this::onMatrixEvent;
     private final MatrixClientService clientService;
     private final AppEventBus appEventBus;
+    private final MatrixEventsHistoryKeeper historyKeeper;
     private final AccountConfigService accountService;
-    private final ViewFactory viewFactory;
+
+    private RoomKey currentRoom;
 
     @FXML
     private TreeView<RoomKey> roomsView;
     @FXML
-    private TabPane chatTabPane;
+    private ListView<String> messageListView;
     @FXML
     private TextArea messageTyped;
 
     @Inject
     public MainLayoutController(MatrixClientService clientService, AppEventBus appEventBus
-            , AccountConfigService accountService, ViewFactory viewFactory) {
+            , MatrixEventsHistoryKeeper historyKeeper, AccountConfigService accountService) {
         this.clientService = clientService;
         this.appEventBus = appEventBus;
+        this.historyKeeper = historyKeeper;
         this.accountService = accountService;
-        this.viewFactory = viewFactory;
     }
 
     @FXML
     public void initialize() {
+        messageListView.setItems(messageList);
         roomsView.setRoot(root);
         roomsView.setCellFactory(view -> {
             TreeCell<RoomKey> cell = new TreeCell<RoomKey>(){
@@ -71,7 +78,7 @@ public class MainLayoutController {
             };
             cell.setOnMouseClicked(event -> {
                 if (event.getClickCount() == 2 && cell.getItem() != null && cell.getItem().hasRoomId())
-                    openChatTab(cell.getItem());
+                    switchActiveChat(cell.getItem());
             } );
             cell.setEditable(false);
             return cell;
@@ -92,6 +99,11 @@ public class MainLayoutController {
     }
 
     private void onMatrixEvent(AppEvent<RoomKey, MatrixEvent> appEvent) {
+        handleNewRoom(appEvent);
+        updateChat(appEvent);
+    }
+
+    private void handleNewRoom(AppEvent<RoomKey, MatrixEvent> appEvent) {
         TreeItem<RoomKey> userIdNode = attachUserIdIfNew(appEvent.getClassifier().getUserId());
         attachRoomIfNew(userIdNode, appEvent.getClassifier());
     }
@@ -117,9 +129,21 @@ public class MainLayoutController {
         return findOrCreateItemByRoomKey(userIdNode, roomKey);
     }
 
-    private void openChatTab(RoomKey roomKey) {
-        Tab newRoomTab = viewFactory.produceChatTab(roomKey);
-        chatTabPane.getTabs().add(newRoomTab);
+    private void updateChat(AppEvent<RoomKey, MatrixEvent> appEvent) {
+        if (!Objects.equals(currentRoom, appEvent.getClassifier()))
+            return;
+        messageList.add(appEvent.getPayload().toString());
+    }
+
+    private void switchActiveChat(RoomKey roomKey) {
+        if (Objects.equals(currentRoom, roomKey))
+            return;
+        messageList.clear();
+        currentRoom = roomKey;
+        historyKeeper.getRoomEventsHistory(roomKey).stream()
+                .map(MatrixEvent::toString)
+                .forEach(messageList::add);
+        messageListView.refresh();
     }
 
 }

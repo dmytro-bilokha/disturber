@@ -1,12 +1,9 @@
 package com.dmytrobilokha.disturber.viewcontroller;
 
 import com.dmytrobilokha.disturber.boot.FXMLLoaderProducer;
-import com.dmytrobilokha.disturber.viewcontroller.chattab.ChatTabController;
-import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.viewcontroller.main.MainLayoutController;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
-import javafx.scene.control.Tab;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +19,6 @@ public class ViewFactory {
 
     private static final Logger LOG = LoggerFactory.getLogger(ViewFactory.class);
     private static final String MAIN_LAYOUT_FXML = "main/MainLayout.fxml";
-    private static final String CHAT_TAB_FXML = "chattab/ChatTab.fxml";
 
     private FXMLLoaderProducer fxmlLoaderProducer;
 
@@ -33,12 +29,6 @@ public class ViewFactory {
     @Inject
     public ViewFactory(FXMLLoaderProducer fxmlLoaderProducer) {
         this.fxmlLoaderProducer = fxmlLoaderProducer;
-    }
-
-    public Tab produceChatTab(RoomKey roomKey) {
-        ViewControllerHolder<Tab, ChatTabController> viewControllerHolder = load(CHAT_TAB_FXML);
-        viewControllerHolder.controller.setRoomToFollow(roomKey);
-        return viewControllerHolder.view;
     }
 
     public Parent produceMainLayout() {

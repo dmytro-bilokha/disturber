@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.VBox?>
 
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.ListView?>
 <AnchorPane fx:controller="com.dmytrobilokha.disturber.viewcontroller.main.MainLayoutController"
             maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.82-ea" xmlns:fx="http://javafx.com/fxml/1">
    <children>
@@ -50,9 +51,9 @@
                           <items>
                             <AnchorPane minHeight="0.0" minWidth="0.0">
                                  <children>
-                                     <TabPane fx:id="chatTabPane"
-                                              AnchorPane.bottomAnchor="0" AnchorPane.topAnchor="0"
-                                              AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0"/>
+                                     <ListView fx:id="messageListView"
+                                               AnchorPane.bottomAnchor="0" AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">
+                                     </ListView>
                                  </children>
                               </AnchorPane>
                             <AnchorPane minHeight="0.0" minWidth="0.0">
