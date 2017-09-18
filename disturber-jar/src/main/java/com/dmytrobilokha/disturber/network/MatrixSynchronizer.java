@@ -194,7 +194,8 @@ class MatrixSynchronizer extends Thread {
                 EventContentDto messageContent = new EventContentDto();
                 messageContent.setBody(message.getMessageText());
                 messageContent.setMsgType("m.text");
-                apiConnector.sendMessageEvent(accessToken, message.getRoomId(), "m.room.text", message.getLocalId(), messageContent);
+                apiConnector.sendMessageEvent(accessToken, message.getRoomId()
+                        , "m.room.message", message.getLocalId(), messageContent);
             }
         } catch (ApiConnectException | ApiRequestException ex) {
             LOG.error("Failed to send message {}", message);
