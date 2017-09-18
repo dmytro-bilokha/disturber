@@ -67,7 +67,7 @@ public class AccountConfigServiceTest {
         assertEquals(1, configs.size());
         AccountConfig config = configs.get(0);
         assertEquals(AccountConfig.newBuilder()
-                .serverAddress("address1")
+                .serverAddress("http://address1.mockserver.org/")
                 .login("login2")
                 .password("password3")
                 .betweenSyncPause(1)
@@ -83,7 +83,7 @@ public class AccountConfigServiceTest {
         List<AccountConfig> configs = accountConfigService.getAccountConfigs();
         assertEquals(2, configs.size());
         assertEquals(AccountConfig.newBuilder()
-                        .serverAddress("address11")
+                        .serverAddress("http://address11.mockserver.org/")
                         .login("login12")
                         .password("password13")
                         .betweenSyncPause(1)
@@ -92,7 +92,7 @@ public class AccountConfigServiceTest {
                         .build()
                 , configs.get(0));
         assertEquals(AccountConfig.newBuilder()
-                        .serverAddress("address21")
+                        .serverAddress("http://address21.mockserver.org/")
                         .login("login22")
                         .password("password23")
                         .betweenSyncPause(4)
@@ -115,7 +115,7 @@ public class AccountConfigServiceTest {
     @Test
     public void testSavesAccountConfig() throws Exception {
         AccountConfigDto accountConfigDto = new AccountConfigDto();
-        accountConfigDto.setServerAddress("address1x");
+        accountConfigDto.setServerAddress("http://address1x.mockserver.org/");
         accountConfigDto.setLogin("login2x");
         accountConfigDto.setPassword("password3x");
         AccountsDto accountsDto = new AccountsDto();
@@ -124,7 +124,7 @@ public class AccountConfigServiceTest {
         accountConfigService.saveAccountConfigs(accountsDto);
         String savedXml = mockWriter.toString();
         assertTrue(savedXml.contains("<version>11</version>"));
-        assertTrue(savedXml.contains("<serverAddress>address1x</serverAddress>"));
+        assertTrue(savedXml.contains("<serverAddress>http://address1x.mockserver.org/</serverAddress>"));
         assertTrue(savedXml.contains("<login>login2x</login>"));
         assertTrue(savedXml.contains("<password>password3x</password>"));
         assertTrue(savedXml.contains("<betweenSyncPause>0</betweenSyncPause>"));

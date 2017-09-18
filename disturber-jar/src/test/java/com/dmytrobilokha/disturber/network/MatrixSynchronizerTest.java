@@ -154,7 +154,7 @@ public class MatrixSynchronizerTest {
 
     private LoginAnswerDto createMockLoginAnswerDto() {
         LoginAnswerDto loginAnswer = new LoginAnswerDto();
-        loginAnswer.setUserId("USER_ID");
+        loginAnswer.setUserId("@LOGIN:my.mockserver.org");
         loginAnswer.setAccessToken("ASSESS_TOKEN");
         return loginAnswer;
     }

@@ -2,7 +2,7 @@
 <accounts>
     <version>1</version>
     <account>
-        <serverAddress>address11</serverAddress>
+        <serverAddress>http://address11.mockserver.org/</serverAddress>
         <login>login12</login>
         <password>password13</password>
         <betweenSyncPause>1</betweenSyncPause>
@@ -10,7 +10,7 @@
         <networkTimeout>3</networkTimeout>
     </account>
     <account>
-        <serverAddress>address21</serverAddress>
+        <serverAddress>http://address21.mockserver.org/</serverAddress>
         <login>login22</login>
         <password>password23</password>
         <betweenSyncPause>4</betweenSyncPause>

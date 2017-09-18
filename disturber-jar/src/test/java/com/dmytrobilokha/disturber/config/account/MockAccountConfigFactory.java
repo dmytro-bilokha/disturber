@@ -4,7 +4,7 @@ public class MockAccountConfigFactory {
 
     public static AccountConfig createMockAccountConfig() {
         return AccountConfig.newBuilder()
-                .serverAddress("SERVER_ADDRESS")
+                .serverAddress("http://my.mockserver.org/")
                 .login("LOGIN")
                 .password("PASSWORD")
                 .betweenSyncPause(1)
@@ -15,7 +15,7 @@ public class MockAccountConfigFactory {
 
     public static AccountConfig createMockAccountConfig(String postfix) {
         return AccountConfig.newBuilder()
-                .serverAddress("SERVER_ADDRESS" + postfix)
+                .serverAddress("http://my" + postfix + ".mockserver.org/")
                 .login("LOGIN" + postfix)
                 .password("PASSWORD" + postfix)
                 .betweenSyncPause(1)

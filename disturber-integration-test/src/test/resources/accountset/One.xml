@@ -2,7 +2,7 @@
 <accounts>
     <version>1</version>
     <account>
-        <serverAddress>address1</serverAddress>
+        <serverAddress>http://address1.mockserver.org/</serverAddress>
         <login>login2</login>
         <password>password3</password>
         <betweenSyncPause>1</betweenSyncPause>
