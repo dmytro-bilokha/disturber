@@ -18,6 +18,16 @@
                 <xs:element name="betweenSyncPause" type="xs:int"/>
                 <xs:element name="syncTimeout" type="xs:int"/>
                 <xs:element name="networkTimeout" type="xs:int"/>
+                <xs:element ref="proxyServer" minOccurs="0" maxOccurs="1"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+
+    <xs:element name="proxyServer">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name="host" type="stringSize1To1024"/>
+                <xs:element name="port" type="xs:int"/>
             </xs:sequence>
         </xs:complexType>
     </xs:element>

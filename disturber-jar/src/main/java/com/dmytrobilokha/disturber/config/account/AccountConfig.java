@@ -16,8 +16,9 @@ public final class AccountConfig {
     private final int betweenSyncPause;
     private final int syncTimeout;
     private final int networkTimeout;
+    private final ProxyServer proxyServer;
 
-    private AccountConfig(Builder builder) {
+    private AccountConfig(Builder builder, ProxyServer proxyServer) {
         this.userId = builder.userId;
         this.serverAddress = builder.serverAddress;
         this.login = builder.login;
@@ -25,6 +26,7 @@ public final class AccountConfig {
         this.betweenSyncPause = builder.betweenSyncPause;
         this.syncTimeout = builder.syncTimeout;
         this.networkTimeout = builder.networkTimeout;
+        this.proxyServer = proxyServer;
     }
 
     static Builder newBuilder() {
@@ -60,18 +62,6 @@ public final class AccountConfig {
     }
 
     @Override
-    public String toString() {
-        return "AccountConfig{" +
-                "userId='" + userId + '\'' +
-                "serverAddress='" + serverAddress + '\'' +
-                ", login='" + login + '\'' +
-                ", betweenSyncPause=" + betweenSyncPause +
-                ", syncTimeout=" + syncTimeout +
-                ", networkTimeout=" + networkTimeout +
-                '}';
-    }
-
-    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
@@ -81,12 +71,26 @@ public final class AccountConfig {
                 networkTimeout == that.networkTimeout &&
                 Objects.equals(serverAddress, that.serverAddress) &&
                 Objects.equals(login, that.login) &&
-                Objects.equals(password, that.password);
+                Objects.equals(password, that.password) &&
+                Objects.equals(proxyServer, that.proxyServer);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(serverAddress, login);
+    }
+
+    @Override
+    public String toString() {
+        return "AccountConfig{" +
+                "userId='" + userId + '\'' +
+                ", serverAddress='" + serverAddress + '\'' +
+                ", login='" + login + '\'' +
+                ", betweenSyncPause=" + betweenSyncPause +
+                ", syncTimeout=" + syncTimeout +
+                ", networkTimeout=" + networkTimeout +
+                ", proxyServer=" + proxyServer +
+                '}';
     }
 
     static class Builder {
@@ -97,6 +101,8 @@ public final class AccountConfig {
         private int betweenSyncPause;
         private int syncTimeout;
         private int networkTimeout;
+        private String proxyHost;
+        private int proxyPort;
 
         Builder serverAddress(String serverAddress) {
             this.serverAddress = serverAddress;
@@ -128,18 +134,55 @@ public final class AccountConfig {
             return this;
         }
 
+        Builder proxyHost(String proxyHost) {
+            this.proxyHost = proxyHost;
+            return this;
+        }
+
+        Builder proxyPort(int proxyPort) {
+            this.proxyPort = proxyPort;
+            return this;
+        }
+
         private String buildUserId() throws MalformedURLException {
             return "@" + login + ':' + new URL(serverAddress).getHost();
         }
 
         AccountConfig build() {
+            validate();
             try {
                 userId = buildUserId();
             } catch (MalformedURLException ex) {
                 throw new IllegalStateException("Failed to build userId from serverAddress='" + serverAddress + '\'', ex);
             }
-            return new AccountConfig(this);
+            if (proxyHost == null || proxyHost.isEmpty())
+                return new AccountConfig(this, null);
+            return new AccountConfig(this, new ProxyServer(proxyHost, proxyPort));
         }
 
+        private void validate() {
+            validateValueProvided(serverAddress, "Server address");
+            validateValueProvided(login, "Login");
+            validateValueProvided(password, "Password");
+            validateIntInRange(betweenSyncPause, 1, 300000, "Pause between server synchronization");
+            validateIntInRange(syncTimeout, 1, 30000, "Synchronization server timeout");
+            validateIntInRange(networkTimeout, 1000, 30000, "Network timeout");
+            if (networkTimeout <= syncTimeout)
+                throw new IllegalStateException("Network timeout set as " + networkTimeout + " and sync timeout is "
+                                        + syncTimeout + " but network timeout should be less than sync timeout");
+            if (proxyHost != null && !proxyHost.isEmpty())
+                validateIntInRange(proxyPort, 1, 65535, "Proxy port");
+        }
+
+        private void validateValueProvided(String value, String msgFieldName) {
+            if (value == null || value.isEmpty())
+                throw new IllegalStateException(msgFieldName + " must be provided");
+        }
+
+        private void validateIntInRange(int value, int lowestValid, int greatestValid, String msgFieldName) {
+            if (value > lowestValid || value < greatestValid)
+                throw new IllegalStateException(msgFieldName + " must be in range from " + lowestValid
+                            + " to " + greatestValid + ", but got " + value + " instead");
+        }
     }
 }

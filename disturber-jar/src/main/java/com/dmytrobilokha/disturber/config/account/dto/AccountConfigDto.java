@@ -1,7 +1,8 @@
-package com.dmytrobilokha.disturber.config.account;
+package com.dmytrobilokha.disturber.config.account.dto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Objects;
 
@@ -18,6 +19,8 @@ public class AccountConfigDto {
     private int betweenSyncPause;
     private int syncTimeout;
     private int networkTimeout;
+    @XmlElement(name = "proxyServer", type = ProxyServerDto.class)
+    private ProxyServerDto proxyServer;
 
     public String getServerAddress() {
         return serverAddress;
@@ -67,14 +70,26 @@ public class AccountConfigDto {
         this.networkTimeout = networkTimeout;
     }
 
+    public ProxyServerDto getProxyServer() {
+        return proxyServer;
+    }
+
+    public void setProxyServer(ProxyServerDto proxyServer) {
+        this.proxyServer = proxyServer;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         AccountConfigDto that = (AccountConfigDto) o;
-        return Objects.equals(serverAddress, that.serverAddress) &&
+        return betweenSyncPause == that.betweenSyncPause &&
+                syncTimeout == that.syncTimeout &&
+                networkTimeout == that.networkTimeout &&
+                Objects.equals(serverAddress, that.serverAddress) &&
                 Objects.equals(login, that.login) &&
-                Objects.equals(password, that.password);
+                Objects.equals(password, that.password) &&
+                Objects.equals(proxyServer, that.proxyServer);
     }
 
     @Override
@@ -90,6 +105,7 @@ public class AccountConfigDto {
                 ", betweenSyncPause=" + betweenSyncPause +
                 ", syncTimeout=" + syncTimeout +
                 ", networkTimeout=" + networkTimeout +
+                ", proxyServer=" + proxyServer +
                 '}';
     }
 }

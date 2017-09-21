@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.config.account;
+package com.dmytrobilokha.disturber.config.account.dto;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
