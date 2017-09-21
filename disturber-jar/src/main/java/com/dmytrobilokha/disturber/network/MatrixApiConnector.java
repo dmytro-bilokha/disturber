@@ -1,5 +1,6 @@
 package com.dmytrobilokha.disturber.network;
 
+import com.dmytrobilokha.disturber.config.account.ProxyServer;
 import com.dmytrobilokha.disturber.network.dto.ErrorDto;
 import com.dmytrobilokha.disturber.network.dto.EventContentDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
@@ -18,6 +19,8 @@ import retrofit2.converter.jackson.JacksonConverterFactory;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
+import java.net.InetSocketAddress;
+import java.net.Proxy;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -31,23 +34,26 @@ class MatrixApiConnector {
     private MatrixService matrixService;
     private Converter<ResponseBody, ErrorDto> errorConverter;
 
-    void createConnection(String baseUrl, int networkTimeout) {
+    void createConnection(String baseUrl, int networkTimeout, ProxyServer proxyServer) {
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(baseUrl)
                 .addConverterFactory(JacksonConverterFactory.create())
-                .client(buildConfiguredHttpClient(networkTimeout))
+                .client(buildConfiguredHttpClient(networkTimeout, proxyServer))
                 .build();
         matrixService = retrofit.create(MatrixService.class);
         errorConverter = retrofit.responseBodyConverter(ErrorDto.class, new Annotation[0]);
     }
 
-    private OkHttpClient buildConfiguredHttpClient(int networkTimeout) {
-        return new OkHttpClient.Builder()
+    private OkHttpClient buildConfiguredHttpClient(int networkTimeout, ProxyServer proxyServer) {
+        OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
                 .readTimeout(networkTimeout, TimeUnit.MILLISECONDS)
                 .connectTimeout(networkTimeout, TimeUnit.MILLISECONDS)
                 .writeTimeout(networkTimeout, TimeUnit.MILLISECONDS)
-                .retryOnConnectionFailure(true)
-                .build();
+                .retryOnConnectionFailure(true);
+        if (proxyServer != null)
+            clientBuilder.proxy(new Proxy(Proxy.Type.HTTP
+                    , new InetSocketAddress(proxyServer.getHost(), proxyServer.getPort())));
+        return clientBuilder.build();
     }
 
     LoginAnswerDto login(LoginPasswordDto loginPassword) throws ApiRequestException, ApiConnectException {

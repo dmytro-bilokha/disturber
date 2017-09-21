@@ -61,6 +61,10 @@ public final class AccountConfig {
         return networkTimeout;
     }
 
+    public ProxyServer getProxyServer() {
+        return proxyServer;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -165,8 +169,8 @@ public final class AccountConfig {
             validateValueProvided(login, "Login");
             validateValueProvided(password, "Password");
             validateIntInRange(betweenSyncPause, 1, 300000, "Pause between server synchronization");
-            validateIntInRange(syncTimeout, 1, 30000, "Synchronization server timeout");
-            validateIntInRange(networkTimeout, 1000, 30000, "Network timeout");
+            validateIntInRange(syncTimeout, 1, 50000, "Synchronization server timeout");
+            validateIntInRange(networkTimeout, 1000, 100000, "Network timeout");
             if (networkTimeout <= syncTimeout)
                 throw new IllegalStateException("Network timeout set as " + networkTimeout + " and sync timeout is "
                                         + syncTimeout + " but network timeout should be less than sync timeout");
@@ -180,7 +184,7 @@ public final class AccountConfig {
         }
 
         private void validateIntInRange(int value, int lowestValid, int greatestValid, String msgFieldName) {
-            if (value > lowestValid || value < greatestValid)
+            if (value < lowestValid || value > greatestValid)
                 throw new IllegalStateException(msgFieldName + " must be in range from " + lowestValid
                             + " to " + greatestValid + ", but got " + value + " instead");
         }

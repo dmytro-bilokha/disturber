@@ -78,7 +78,7 @@ public class MatrixApiConnectorTest {
         LoginPasswordDto loginPasswordDto = new LoginPasswordDto();
         loginPasswordDto.setLogin("MY_LOGIN");
         loginPasswordDto.setPassword("MY_PASSWORD");
-        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT);
+        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT, null);
         LoginAnswerDto loginAnswerDto = apiConnector.login(loginPasswordDto);
         HttpServerMock.RequestCapture requestCapture = httpServerMock.getRequestCapture();
         assertNotNull(requestCapture);
@@ -100,7 +100,7 @@ public class MatrixApiConnectorTest {
         LoginPasswordDto loginPasswordDto = new LoginPasswordDto();
         loginPasswordDto.setLogin("MY_LOGIN");
         loginPasswordDto.setPassword("MY_PASSWORD");
-        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT);
+        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT, null);
         try {
             LoginAnswerDto loginAnswerDto = apiConnector.login(loginPasswordDto);
         } catch (ApiRequestException ex) {
@@ -124,7 +124,7 @@ public class MatrixApiConnectorTest {
     public void testSynchronizesInGeneral() throws URISyntaxException, ApiConnectException, ApiRequestException {
         URI syncUri = new URI("/" + SYNC_PATH + "?access_token=ACCESS_TOKEN");
         httpServerMock.setUriMock(syncUri, new HttpServerMock.Response(200, JSONSET_BASE + "sync.json"));
-        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT);
+        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT, null);
         SyncResponseDto syncResponseDto = apiConnector.sync("ACCESS_TOKEN");
         HttpServerMock.RequestCapture requestCapture = httpServerMock.getRequestCapture();
         assertNotNull(requestCapture);
@@ -138,7 +138,7 @@ public class MatrixApiConnectorTest {
     public void testSendsTextMessage() throws URISyntaxException, ApiConnectException, ApiRequestException {
         URI sendMessageUri = new URI("/_matrix/client/r0/rooms/!636q39766251:example.com/send/m.room.message/1?access_token=ACCESS_TOKEN");
         httpServerMock.setUriMock(sendMessageUri, new HttpServerMock.Response(200, JSONSET_BASE + "sendMessage.json"));
-        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT);
+        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT, null);
         EventContentDto contentDto = new EventContentDto();
         contentDto.setBody("Hello World");
         contentDto.setMsgType("msg.text");

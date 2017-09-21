@@ -65,7 +65,7 @@ public class MatrixSynchronizerTest {
     public void testOrderOfOperations() throws Exception {
         synchronizer.run();
         InOrder orderVerifier = Mockito.inOrder(apiConnector);
-        orderVerifier.verify(apiConnector).createConnection(Mockito.anyObject(), Mockito.anyInt());
+        orderVerifier.verify(apiConnector).createConnection(Mockito.anyObject(), Mockito.anyInt(), Mockito.anyObject());
         orderVerifier.verify(apiConnector).login(Mockito.anyObject());
         orderVerifier.verify(apiConnector).sync(Mockito.anyObject());
         orderVerifier.verify(apiConnector).sync(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyInt());
@@ -75,7 +75,7 @@ public class MatrixSynchronizerTest {
     public void testCreatesConnection() {
         synchronizer.run();
         Mockito.verify(apiConnector, Mockito.times(1)).createConnection(accountConfig.getServerAddress()
-                , accountConfig.getNetworkTimeout());
+                , accountConfig.getNetworkTimeout(), null);
     }
 
     @Test

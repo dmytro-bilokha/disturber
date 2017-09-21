@@ -72,8 +72,8 @@ public class AccountConfigServiceTest {
                 .login("login2")
                 .password("password3")
                 .betweenSyncPause(1)
-                .syncTimeout(2)
-                .networkTimeout(3)
+                .syncTimeout(2000)
+                .networkTimeout(3000)
                 .build()
                 , config);
     }
@@ -88,8 +88,8 @@ public class AccountConfigServiceTest {
                         .login("login12")
                         .password("password13")
                         .betweenSyncPause(1)
-                        .syncTimeout(2)
-                        .networkTimeout(3)
+                        .syncTimeout(2000)
+                        .networkTimeout(3000)
                         .build()
                 , configs.get(0));
         assertEquals(AccountConfig.newBuilder()
@@ -97,8 +97,8 @@ public class AccountConfigServiceTest {
                         .login("login22")
                         .password("password23")
                         .betweenSyncPause(4)
-                        .syncTimeout(5)
-                        .networkTimeout(6)
+                        .syncTimeout(5000)
+                        .networkTimeout(6000)
                         .build()
                 , configs.get(1));
     }

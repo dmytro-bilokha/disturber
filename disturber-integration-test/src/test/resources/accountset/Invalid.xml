@@ -7,6 +7,6 @@
         <password>password3</password>
         <betweenSyncPause>1</betweenSyncPause>
         <syncTimeout>here should be number</syncTimeout>
-        <networkTimeout>3</networkTimeout>
+        <networkTimeout>3000</networkTimeout>
     </account>
 </accounts>

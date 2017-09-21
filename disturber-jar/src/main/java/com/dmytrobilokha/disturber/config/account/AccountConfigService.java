@@ -4,6 +4,7 @@ import com.dmytrobilokha.disturber.Constants;
 import com.dmytrobilokha.disturber.SystemMessage;
 import com.dmytrobilokha.disturber.config.account.dto.AccountConfigDto;
 import com.dmytrobilokha.disturber.config.account.dto.AccountsDto;
+import com.dmytrobilokha.disturber.config.account.dto.ProxyServerDto;
 import com.dmytrobilokha.disturber.config.property.PropertyService;
 import com.dmytrobilokha.disturber.fs.FsService;
 import org.slf4j.Logger;
@@ -115,14 +116,19 @@ public class AccountConfigService {
     }
 
     private AccountConfig mapDtoToConfig(AccountConfigDto configDto) {
-        return AccountConfig.newBuilder()
+        AccountConfig.Builder accountBuilder = AccountConfig.newBuilder()
                 .serverAddress(configDto.getServerAddress())
                 .login(configDto.getLogin())
                 .password(configDto.getPassword())
                 .betweenSyncPause(configDto.getBetweenSyncPause())
                 .syncTimeout(configDto.getSyncTimeout())
-                .networkTimeout(configDto.getNetworkTimeout())
-                .build();
+                .networkTimeout(configDto.getNetworkTimeout());
+        ProxyServerDto proxyDto = configDto.getProxyServer();
+        if (proxyDto != null)
+            accountBuilder
+                    .proxyHost(proxyDto.getHost())
+                    .proxyPort(proxyDto.getPort());
+        return accountBuilder.build();
     }
 
     public void saveAccountConfigs(AccountsDto accountsDto) throws AccountConfigAccessException {

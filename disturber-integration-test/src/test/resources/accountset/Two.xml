@@ -6,15 +6,15 @@
         <login>login12</login>
         <password>password13</password>
         <betweenSyncPause>1</betweenSyncPause>
-        <syncTimeout>2</syncTimeout>
-        <networkTimeout>3</networkTimeout>
+        <syncTimeout>2000</syncTimeout>
+        <networkTimeout>3000</networkTimeout>
     </account>
     <account>
         <serverAddress>http://address21.mockserver.org/</serverAddress>
         <login>login22</login>
         <password>password23</password>
         <betweenSyncPause>4</betweenSyncPause>
-        <syncTimeout>5</syncTimeout>
-        <networkTimeout>6</networkTimeout>
+        <syncTimeout>5000</syncTimeout>
+        <networkTimeout>6000</networkTimeout>
     </account>
 </accounts>

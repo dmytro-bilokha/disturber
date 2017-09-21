@@ -8,8 +8,8 @@ public class MockAccountConfigFactory {
                 .login("LOGIN")
                 .password("PASSWORD")
                 .betweenSyncPause(1)
-                .syncTimeout(2)
-                .networkTimeout(3)
+                .syncTimeout(2000)
+                .networkTimeout(3000)
                 .build();
     }
 
@@ -19,8 +19,8 @@ public class MockAccountConfigFactory {
                 .login("LOGIN" + postfix)
                 .password("PASSWORD" + postfix)
                 .betweenSyncPause(1)
-                .syncTimeout(2)
-                .networkTimeout(3)
+                .syncTimeout(2000)
+                .networkTimeout(3000)
                 .build();
     }
 }

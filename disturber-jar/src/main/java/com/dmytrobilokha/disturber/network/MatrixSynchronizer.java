@@ -94,7 +94,8 @@ class MatrixSynchronizer extends Thread {
     }
 
     private void connect() {
-        apiConnector.createConnection(accountConfig.getServerAddress(), accountConfig.getNetworkTimeout());
+        apiConnector.createConnection(accountConfig.getServerAddress()
+                , accountConfig.getNetworkTimeout(), accountConfig.getProxyServer());
         state = State.CONNECTED;
     }
 

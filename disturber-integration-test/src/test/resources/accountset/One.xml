@@ -6,7 +6,7 @@
         <login>login2</login>
         <password>password3</password>
         <betweenSyncPause>1</betweenSyncPause>
-        <syncTimeout>2</syncTimeout>
-        <networkTimeout>3</networkTimeout>
+        <syncTimeout>2000</syncTimeout>
+        <networkTimeout>3000</networkTimeout>
     </account>
 </accounts>
