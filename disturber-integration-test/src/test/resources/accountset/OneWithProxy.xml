@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<accounts>
+    <version>1</version>
+    <account>
+        <serverAddress>http://address1.mockserver.org/</serverAddress>
+        <login>login2</login>
+        <password>password3</password>
+        <betweenSyncPause>1</betweenSyncPause>
+        <syncTimeout>2000</syncTimeout>
+        <networkTimeout>3000</networkTimeout>
+        <proxyServer>
+            <host>proxy.host.net</host>
+            <port>42001</port>
+        </proxyServer>
+    </account>
+</accounts>

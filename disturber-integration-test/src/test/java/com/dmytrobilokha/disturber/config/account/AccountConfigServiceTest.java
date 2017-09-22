@@ -79,6 +79,25 @@ public class AccountConfigServiceTest {
     }
 
     @Test
+    public void testReadsOneAccountWithProxyServerFromFile() throws Exception {
+        setupFsServiceMockReader("OneWithProxy.xml");
+        List<AccountConfig> configs = accountConfigService.getAccountConfigs();
+        assertEquals(1, configs.size());
+        AccountConfig config = configs.get(0);
+        assertEquals(AccountConfig.newBuilder()
+                        .serverAddress("http://address1.mockserver.org/")
+                        .login("login2")
+                        .password("password3")
+                        .betweenSyncPause(1)
+                        .syncTimeout(2000)
+                        .networkTimeout(3000)
+                        .proxyHost("proxy.host.net")
+                        .proxyPort(42001)
+                        .build()
+                , config);
+    }
+
+    @Test
     public void testReadsTwoAccountsFromFile() throws Exception {
         setupFsServiceMockReader("Two.xml");
         List<AccountConfig> configs = accountConfigService.getAccountConfigs();
