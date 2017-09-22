@@ -23,4 +23,17 @@ public class MockAccountConfigFactory {
                 .networkTimeout(3000)
                 .build();
     }
+
+    public static AccountConfig createMockAccountConfigWithProxy() {
+        return AccountConfig.newBuilder()
+                .serverAddress("http://my.mockserver.org/")
+                .login("LOGIN")
+                .password("PASSWORD")
+                .betweenSyncPause(1)
+                .syncTimeout(2000)
+                .networkTimeout(3000)
+                .proxyHost("my.proxy.net")
+                .proxyPort(8000)
+                .build();
+    }
 }

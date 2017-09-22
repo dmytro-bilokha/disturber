@@ -79,6 +79,19 @@ public class MatrixSynchronizerTest {
     }
 
     @Test
+    public void testCreatesConnectionWithProxy() throws Exception {
+        AccountConfig account = MockAccountConfigFactory.createMockAccountConfigWithProxy();
+        MatrixSynchronizer proxySynchronizer = new MatrixSynchronizer(account, eventQueue, apiConnector);
+        Mockito.doAnswer(invocation -> {
+            proxySynchronizer.disconnect();
+            return laterSyncResponse;
+        }).when(apiConnector).sync(Mockito.anyObject(), Mockito.anyObject(), Mockito.anyInt());
+        proxySynchronizer.run();
+        Mockito.verify(apiConnector, Mockito.times(1)).createConnection(account.getServerAddress()
+                , account.getNetworkTimeout(), account.getProxyServer());
+    }
+
+    @Test
     public void testLogins() throws Exception {
         synchronizer.run();
         Mockito.verify(apiConnector, Mockito.times(1)).login(Mockito.anyObject());
