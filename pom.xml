@@ -26,6 +26,7 @@
         <testfx.version>4.0.1-alpha</testfx.version>
         <monocle.version>1.8.0_20</monocle.version>
 
+        <maven.surefire.plugin.version>2.20.1</maven.surefire.plugin.version>
         <maven.jar.plugin.version>3.0.2</maven.jar.plugin.version>
         <maven.assembly.plugin.version>3.0.0</maven.assembly.plugin.version>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -150,6 +151,16 @@
     <build>
         <pluginManagement>
             <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>${maven.surefire.plugin.version}</version>
+                    <configuration>
+                        <systemPropertyVariables>
+                            <sonar.jacoco.reportMissing.force.zero>true</sonar.jacoco.reportMissing.force.zero>
+                        </systemPropertyVariables>
+                    </configuration>
+                </plugin>
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
