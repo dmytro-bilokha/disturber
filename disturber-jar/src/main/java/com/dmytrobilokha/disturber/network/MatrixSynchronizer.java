@@ -27,10 +27,10 @@ import java.util.concurrent.atomic.AtomicLong;
  * The class represents synchronizer which should be run in the separate thread and synchronizes matrix events for
  * given account.
  */
-//TODO: add error handling with retry and pauses between, etc
 class MatrixSynchronizer extends Thread {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixSynchronizer.class);
+    private static final int MAX_TRY = 5;
 
     private final Queue<OutgoingMessage> appToServerQueue = new ConcurrentLinkedQueue<>();
     private final AtomicLong messageId = new AtomicLong();
@@ -42,50 +42,68 @@ class MatrixSynchronizer extends Thread {
     private State state = State.NOT_CONNECTED;
     private String accessToken;
     private String nextBatchId;
-    private boolean haveNewEvents;
+    private long networkTryNumber = 0;
+    private boolean active = true;
     private volatile boolean keepGoing = true;
+    private boolean haveNewEvents;
 
     MatrixSynchronizer(AccountConfig accountConfig, CrossThreadEventQueue serverToAppQueue, MatrixApiConnector apiConnector) {
         this.accountConfig = accountConfig;
         this.serverToAppQueue = serverToAppQueue;
         this.apiConnector = apiConnector;
+        setName(this.getClass().getSimpleName() + "-" + accountConfig.getUserId());
     }
 
     @Override
     public void run() {
         while (keepGoing) {
-            switch (state) {
-                case NOT_CONNECTED:
-                    connect();
-                    break;
-
-                case CONNECTED:
-                    login();
-                    break;
-
-                case LOGGEDIN:
-                    initialSync();
-                    break;
-
-                case INITIAL_SYNCED:
-                    sendEventsToServer();
-                    stepSync();
-                    break;
-            }
-            if (haveNewEvents) {
-                serverToAppQueue.triggerEventCallback();
-                haveNewEvents = false;
-            }
-            if (!keepGoing) //Check keepGoing flag once again to make app more responsive in case of shut down
-                break;
+            talkToServer();
+            pushServerEventsToApp();
             try {
-                Thread.sleep(accountConfig.getBetweenSyncPause());
+                sleepPauseTime();
             } catch (InterruptedException ex) {
                 LOG.error("Thread interrupted", ex);
                 Thread.currentThread().interrupt();
                 return;
             }
         }
+    }
+
+    private void talkToServer() {
+        if (!active) //If active flag is not set, do nothing, will just sleep all the time
+            return;
+        switch (state) {
+            case NOT_CONNECTED:
+                connect();
+                break;
+
+            case CONNECTED:
+                login();
+                break;
+
+            case LOGGEDIN:
+                initialSync();
+                break;
+
+            case SYNCED:
+                sendEventsToServer();
+                break;
+
+            case MESSAGES_SENT:
+                stepSync();
+                break;
+        }
+    }
+
+    private void pushServerEventsToApp() {
+        if (!haveNewEvents)
+            return;
+        serverToAppQueue.triggerEventCallback();
+        haveNewEvents = false;
+    }
+
+    private void sleepPauseTime() throws InterruptedException {
+        Thread.sleep(accountConfig.getBetweenSyncPause() * networkTryNumber); //Pause increases on fail to make server's life easier
     }
 
     //This method to be called from the main FX application thread to "stop the show"
@@ -96,7 +114,25 @@ class MatrixSynchronizer extends Thread {
     private void connect() {
         apiConnector.createConnection(accountConfig.getServerAddress()
                 , accountConfig.getNetworkTimeout(), accountConfig.getProxyServer());
-        state = State.CONNECTED;
+        handleChangeState(State.CONNECTED);
+    }
+
+    private void handleChangeState(State state) {
+        networkTryNumber = 1;
+        this.state = state;
+    }
+
+    private void handleNetworkFail(AppEventType type) {
+        networkTryNumber++;
+        if (networkTryNumber <= MAX_TRY)
+            return;
+        active = false;
+        addEvent(AppEvent.withClassifier(type, accountConfig));
+    }
+
+    private void handleResponseFail(AppEventType type) {
+        active = false;
+        addEvent(AppEvent.withClassifier(type, accountConfig));
     }
 
     private void login() {
@@ -108,11 +144,11 @@ class MatrixSynchronizer extends Thread {
             answerDto = apiConnector.login(loginPasswordDto);
         } catch (ApiConnectException ex) {
             LOG.error("Failed to login with {}", accountConfig, ex);
-            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_LOGIN_CONNECTION_FAILED, accountConfig));
+            handleNetworkFail(AppEventType.MATRIX_LOGIN_CONNECTION_FAILED);
             return;
         } catch (ApiRequestException ex) {
             LOG.error("Failed to login with {}, got {}", accountConfig, ex.getApiError(), ex);
-            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_LOGIN_FAILED, accountConfig));
+            handleResponseFail(AppEventType.MATRIX_LOGIN_FAILED);
             return;
         }
         accessToken = answerDto.getAccessToken();
@@ -120,7 +156,7 @@ class MatrixSynchronizer extends Thread {
         if (!accountConfig.getUserId().equals(userId))
             LOG.warn("After logging in for {} got from server userId={}, but from account have userId={}"
                         , accountConfig, userId, accountConfig.getUserId());
-        state = State.LOGGEDIN;
+        handleChangeState(State.LOGGEDIN);
         addEvent(AppEvent.withClassifier(AppEventType.MATRIX_LOGGEDIN, userId));
     }
 
@@ -137,36 +173,34 @@ class MatrixSynchronizer extends Thread {
     }
 
     private void initialSync() {
-        boolean success = sync(connector -> connector.sync(accessToken));
-        if (success)
-            state = State.INITIAL_SYNCED;
+        sync(connector -> connector.sync(accessToken));
     }
 
     private void stepSync() {
-        sync(matrixService -> matrixService.sync(accessToken, nextBatchId, accountConfig.getSyncTimeout()));
+        sync(connector -> connector.sync(accessToken, nextBatchId, accountConfig.getSyncTimeout()));
     }
 
-    private boolean sync(ThrowingFunction<MatrixApiConnector, SyncResponseDto> requestFunction) {
+    private void sync(ThrowingFunction<MatrixApiConnector, SyncResponseDto> requestFunction) {
         SyncResponseDto syncResponseDto;
         try {
             syncResponseDto = requestFunction.apply(apiConnector);
         } catch (ApiConnectException ex) {
             LOG.error("Failed to synchronize {} with server because of input/output error", accountConfig, ex);
-            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNC_CONNECTION_FAILED, accountConfig.getUserId()));
-            return false;
+            handleNetworkFail(AppEventType.MATRIX_SYNC_CONNECTION_FAILED);
+            return;
         } catch (ApiRequestException ex) {
             LOG.error("Failed to synchronize {} with server, got {}", accountConfig, ex.getApiError(), ex);
-            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNC_FAILED, accountConfig.getUserId()));
-            return false;
+            handleResponseFail(AppEventType.MATRIX_SYNC_FAILED);
+            return;
         } catch (Exception ex) {
             LOG.error("Failed to synchronize {} with server, got unexpected exception", accountConfig, ex);
-            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNC_CONNECTION_FAILED, accountConfig.getUserId()));
-            return false;
+            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNC_UNKNOWN_FAIL, accountConfig));
+            return;
         }
         nextBatchId = syncResponseDto.getNextBatch();
         List<AppEvent> events = mapSyncResponseDtoToAppEvents(syncResponseDto);
         addEvents(events);
-        return true;
+        handleChangeState(State.SYNCED);
     }
 
     private List<AppEvent> mapSyncResponseDtoToAppEvents(SyncResponseDto syncResponseDto) {
@@ -189,20 +223,29 @@ class MatrixSynchronizer extends Thread {
     }
 
     private void sendEventsToServer() {
-        OutgoingMessage message = null;
-        try {
-            while ((message = appToServerQueue.poll()) != null) {
-                EventContentDto messageContent = new EventContentDto();
-                messageContent.setBody(message.getMessageText());
-                messageContent.setMsgType("m.text");
+        OutgoingMessage message;
+        while ((message = appToServerQueue.peek()) != null) {
+            EventContentDto messageContent = new EventContentDto();
+            messageContent.setBody(message.getMessageText());
+            messageContent.setMsgType("m.text");
+            try {
                 apiConnector.sendMessageEvent(accessToken, message.getRoomId()
                         , "m.room.message", message.getLocalId(), messageContent);
+            } catch (ApiConnectException ex) {
+                LOG.error("Failed to send message {}, because of input/output error", message, ex);
+                handleNetworkFail(AppEventType.MATRIX_SEND_CONNECTION_FAILED);
+                return;
+            } catch (ApiRequestException ex) {
+                LOG.error("Failed to send message {}, got {}", message, ex.getApiError(), ex);
+                handleResponseFail(AppEventType.MATRIX_SEND_FAILED);
+                return;
             }
-        } catch (ApiConnectException | ApiRequestException ex) {
-            LOG.error("Failed to send message {}", message);
+            appToServerQueue.poll();
         }
+        handleChangeState(State.MESSAGES_SENT);
     }
 
+    //Called from JavaFX application thread
     public void enqueueOutgoingMessage(String roomId, String message) {
         OutgoingMessage outgoingMessage = new OutgoingMessage(roomId, message, getNewMessageId());
         appToServerQueue.add(outgoingMessage);
@@ -213,7 +256,7 @@ class MatrixSynchronizer extends Thread {
     }
 
     private enum State {
-        NOT_CONNECTED, CONNECTED, LOGGEDIN, INITIAL_SYNCED;
+        NOT_CONNECTED, CONNECTED, LOGGEDIN, SYNCED, MESSAGES_SENT;
     }
 
 }

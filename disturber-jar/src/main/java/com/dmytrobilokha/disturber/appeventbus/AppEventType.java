@@ -12,9 +12,12 @@ public enum AppEventType {
     , MATRIX_LOGGEDIN(String.class, null)
     , MATRIX_LOGIN_CONNECTION_FAILED(AccountConfig.class, null)
     , MATRIX_LOGIN_FAILED(AccountConfig.class, null)
-    , MATRIX_SYNC_CONNECTION_FAILED(String.class, null)
-    , MATRIX_SYNC_FAILED(String.class, null)
+    , MATRIX_SYNC_CONNECTION_FAILED(AccountConfig.class, null)
+    , MATRIX_SYNC_FAILED(AccountConfig.class, null)
+    , MATRIX_SYNC_UNKNOWN_FAIL(AccountConfig.class, null)
     , MATRIX_OUTGOING_MESSAGE(RoomKey.class, String.class)
+    , MATRIX_SEND_CONNECTION_FAILED(AccountConfig.class, null)
+    , MATRIX_SEND_FAILED(AccountConfig.class, null)
     ;
 
     private final Class classifierClass;
