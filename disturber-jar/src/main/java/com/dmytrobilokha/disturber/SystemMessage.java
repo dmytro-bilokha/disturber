@@ -1,37 +1,23 @@
 package com.dmytrobilokha.disturber;
 
-import java.text.MessageFormat;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
-
 /**
  * The class represents a systemMessage which could be shown to user
  */
 public class SystemMessage {
 
-    private final String key;
-    private final Object[] parameters;
+    private final String message;
+    private final String details;
 
-    public SystemMessage(String key) {
-        this.key = key;
-        this.parameters = null;
+    public SystemMessage(String message, String details) {
+        this.message = message;
+        this.details = details;
     }
 
-    public SystemMessage(String key, Object... parameters) {
-        this.key = key;
-        this.parameters = parameters;
+    public String getMessage() {
+        return message;
     }
 
-    public String getText(ResourceBundle resourceBundle) {
-        try {
-            String message = resourceBundle.getString(key);
-            if (parameters == null)
-                return message;
-            else
-                return MessageFormat.format(message, parameters);
-        } catch (MissingResourceException ex) {
-            return key;
-        }
+    public String getDetails() {
+        return details;
     }
-
 }

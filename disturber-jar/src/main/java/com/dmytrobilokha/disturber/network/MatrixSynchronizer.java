@@ -39,6 +39,7 @@ class MatrixSynchronizer extends Thread {
     private final AccountConfig accountConfig;
     private final CrossThreadEventQueue serverToAppQueue;
     private final MatrixApiConnector apiConnector;
+    private final ApiExceptionToSystemMessageConverter exceptionConverter;
     private final MatrixEvent.Builder matrixEventBuilder = MatrixEvent.newBuilder();
 
     private State state = State.NOT_CONNECTED;
@@ -49,10 +50,12 @@ class MatrixSynchronizer extends Thread {
     private volatile boolean active = true;
     private volatile boolean keepGoing = true;
 
-    MatrixSynchronizer(AccountConfig accountConfig, CrossThreadEventQueue serverToAppQueue, MatrixApiConnector apiConnector) {
+    MatrixSynchronizer(AccountConfig accountConfig, CrossThreadEventQueue serverToAppQueue
+            , MatrixApiConnector apiConnector, ApiExceptionToSystemMessageConverter exceptionConverter) {
         this.accountConfig = accountConfig;
         this.serverToAppQueue = serverToAppQueue;
         this.apiConnector = apiConnector;
+        this.exceptionConverter = exceptionConverter;
         setName(this.getClass().getSimpleName() + "-" + accountConfig.getUserId());
     }
 
@@ -130,23 +133,18 @@ class MatrixSynchronizer extends Thread {
         this.state = state;
     }
 
-    private void handleNetworkFail(String systemMessageKey) {
+    private void handleNetworkFail(State state, Exception ex) {
         networkTryNumber++;
         if (networkTryNumber <= MAX_TRY)
             return;
         active = false;
-        SystemMessage systemMessage = new SystemMessage(systemMessageKey, accountConfig.getUserId());
+        SystemMessage systemMessage = exceptionConverter.buildSystemMessage(state, accountConfig.getUserId(), ex);
         addEvent(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_CONNECTION_FAILED, accountConfig, systemMessage));
     }
 
-    private void handleResponseFail(String systemMessageKey, ApiRequestException ex) {
+    private void handleResponseFail(State state, Exception ex) {
         active = false;
-        SystemMessage systemMessage;
-        if (ex != null)
-            systemMessage = new SystemMessage(systemMessageKey, accountConfig.getUserId()
-                , ex.getApiError().getNetworkCode(), ex.getApiError().getErrorCode(), ex.getApiError().getErrorMessage());
-        else
-            systemMessage = new SystemMessage(systemMessageKey, accountConfig.getUserId());
+        SystemMessage systemMessage = exceptionConverter.buildSystemMessage(state, accountConfig.getUserId(), ex);
         addEvent(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_RESPONSE_FAILED, accountConfig, systemMessage));
     }
 
@@ -159,11 +157,11 @@ class MatrixSynchronizer extends Thread {
             answerDto = apiConnector.login(loginPasswordDto);
         } catch (ApiConnectException ex) {
             LOG.error("Failed to login with {}", accountConfig, ex);
-            handleNetworkFail("matrix.login.connection.fail");
+            handleNetworkFail(State.LOGGEDIN, ex);
             return;
         } catch (ApiRequestException ex) {
             LOG.error("Failed to login with {}, got {}", accountConfig, ex.getApiError(), ex);
-            handleResponseFail("matrix.login.response.fail", ex);
+            handleResponseFail(State.LOGGEDIN, ex);
             return;
         }
         accessToken = answerDto.getAccessToken();
@@ -201,15 +199,15 @@ class MatrixSynchronizer extends Thread {
             syncResponseDto = requestFunction.apply(apiConnector);
         } catch (ApiConnectException ex) {
             LOG.error("Failed to synchronize {} with server because of input/output error", accountConfig, ex);
-            handleNetworkFail("matrix.sync.connection.fail");
+            handleNetworkFail(State.SYNCED, ex);
             return;
         } catch (ApiRequestException ex) {
             LOG.error("Failed to synchronize {} with server, got {}", accountConfig, ex.getApiError(), ex);
-            handleResponseFail("matrix.sync.response.fail", ex);
+            handleResponseFail(State.SYNCED, ex);
             return;
         } catch (Exception ex) {
             LOG.error("Failed to synchronize {} with server, got unexpected exception", accountConfig, ex);
-            handleResponseFail("matrix.sync.unexpected.fail", null);
+            handleResponseFail(State.SYNCED, ex);
             return;
         }
         nextBatchId = syncResponseDto.getNextBatch();
@@ -248,11 +246,11 @@ class MatrixSynchronizer extends Thread {
                         , "m.room.message", message.getLocalId(), messageContent);
             } catch (ApiConnectException ex) {
                 LOG.error("Failed to send message {}, because of input/output error", message, ex);
-                handleNetworkFail("matrix.send.connection.fail");
+                handleNetworkFail(State.MESSAGES_SENT, ex);
                 return;
             } catch (ApiRequestException ex) {
                 LOG.error("Failed to send message {}, got {}", message, ex.getApiError(), ex);
-                handleResponseFail("matrix.send.response.fail", ex);
+                handleResponseFail(State.MESSAGES_SENT, ex);
                 return;
             }
             appToServerQueue.poll();
@@ -270,7 +268,7 @@ class MatrixSynchronizer extends Thread {
         return String.valueOf(messageId.getAndIncrement());
     }
 
-    private enum State {
+    enum State {
         NOT_CONNECTED, CONNECTED, LOGGEDIN, SYNCED, MESSAGES_SENT;
     }
 

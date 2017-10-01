@@ -4,16 +4,20 @@ import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import javafx.application.Platform;
 
 import javax.enterprise.context.Dependent;
+import javax.inject.Inject;
 
 @Dependent
 class MatrixSynchronizerFactory {
 
-    MatrixSynchronizerFactory() {
-        //No args constructor for CDI framework
+    private final ApiExceptionToSystemMessageConverter exceptionConverter;
+
+    @Inject
+    MatrixSynchronizerFactory(ApiExceptionToSystemMessageConverter exceptionConverter) {
+        this.exceptionConverter = exceptionConverter;
     }
 
     MatrixSynchronizer createMatrixSynchronizer(AccountConfig accountConfig, CrossThreadEventQueue eventQueue) {
-        return new MatrixSynchronizer(accountConfig, eventQueue, new MatrixApiConnector());
+        return new MatrixSynchronizer(accountConfig, eventQueue, new MatrixApiConnector(), exceptionConverter);
     }
 
     CrossThreadEventQueue createCrossThreadEventQueue(Runnable onEventCallback) {

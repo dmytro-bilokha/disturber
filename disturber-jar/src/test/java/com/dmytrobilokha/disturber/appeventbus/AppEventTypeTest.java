@@ -7,7 +7,7 @@ public class AppEventTypeTest {
 
     @Test
     public void testPayloadForConnectionFailedEventOk() {
-        AppEventType.MATRIX_CONNECTION_FAILED.validatePayload(new SystemMessage("blah"));
+        AppEventType.MATRIX_CONNECTION_FAILED.validatePayload(new SystemMessage("blah", "blablah"));
     }
 
     @Test(expected = IllegalArgumentException.class)

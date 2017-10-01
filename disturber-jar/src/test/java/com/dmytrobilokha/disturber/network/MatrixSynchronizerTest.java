@@ -19,6 +19,8 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
+import java.util.ResourceBundle;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -36,6 +38,7 @@ public class MatrixSynchronizerTest {
     private MatrixApiConnector apiConnector;
     private AccountConfig accountConfig;
     private CrossThreadEventQueue eventQueue;
+    private ApiExceptionToSystemMessageConverter exceptionConverter;
     private int triggerCount;
 
     @Before
@@ -46,7 +49,8 @@ public class MatrixSynchronizerTest {
             triggerCount++;
         });
         apiConnector = Mockito.mock(MatrixApiConnector.class);
-        synchronizer = new MatrixSynchronizer(accountConfig, eventQueue, apiConnector);
+        exceptionConverter = new ApiExceptionToSystemMessageConverter(ResourceBundle.getBundle("messages"));
+        synchronizer = new MatrixSynchronizer(accountConfig, eventQueue, apiConnector, exceptionConverter);
         loginAnswerDto = createMockLoginAnswerDto();
         Mockito.doAnswer(invocation -> {
             loginPasswordGot = (LoginPasswordDto) invocation.getArguments()[0];
@@ -81,7 +85,7 @@ public class MatrixSynchronizerTest {
     @Test
     public void testCreatesConnectionWithProxy() throws Exception {
         AccountConfig account = MockAccountConfigFactory.createMockAccountConfigWithProxy();
-        MatrixSynchronizer proxySynchronizer = new MatrixSynchronizer(account, eventQueue, apiConnector);
+        MatrixSynchronizer proxySynchronizer = new MatrixSynchronizer(account, eventQueue, apiConnector, exceptionConverter);
         Mockito.doAnswer(invocation -> {
             proxySynchronizer.disconnect();
             return laterSyncResponse;

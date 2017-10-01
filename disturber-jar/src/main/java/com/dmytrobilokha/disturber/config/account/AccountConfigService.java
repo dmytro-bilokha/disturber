@@ -1,7 +1,6 @@
 package com.dmytrobilokha.disturber.config.account;
 
 import com.dmytrobilokha.disturber.Constants;
-import com.dmytrobilokha.disturber.SystemMessage;
 import com.dmytrobilokha.disturber.config.account.dto.AccountConfigDto;
 import com.dmytrobilokha.disturber.config.account.dto.AccountsDto;
 import com.dmytrobilokha.disturber.config.account.dto.ProxyServerDto;
@@ -44,14 +43,16 @@ public class AccountConfigService {
     private List<AccountConfig> accountConfigs;
 
     private FsService fsService;
+    private ExceptionFactory exceptionFactory;
 
     protected AccountConfigService() {
         //Empty no-args constructor to keep CDI framework happy
     }
 
     @Inject
-    public AccountConfigService(PropertyService propertyService, FsService fsService) {
+    public AccountConfigService(PropertyService propertyService, FsService fsService, ExceptionFactory exceptionFactory) {
         this.fsService = fsService;
+        this.exceptionFactory = exceptionFactory;
         accountsFilePath = Paths.get(propertyService.getConfigDirLocation() + Constants.FILE_SEPARATOR + ACCOUNTS_FILE_NAME);
     }
 
@@ -79,29 +80,22 @@ public class AccountConfigService {
                     , reader -> (AccountsDto) unmarshaller.unmarshal(reader));
         } catch (SAXException ex) {
             LOG.error("Unable to create validation schema from internal resource '{}'", ACCOUNTS_XSD_RESOURCE, ex);
-            throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.load.exception.sax"), ex);
+            throw exceptionFactory.failedSchemaCreationOnLoad(ACCOUNTS_XSD_RESOURCE, ex);
         } catch (IOException ex) {
             LOG.error("Unable to open and read accounts file '{}'", accountsFilePath, ex);
-            throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.load.exception.io", accountsFilePath), ex);
+            throw exceptionFactory.failedRead(accountsFilePath, ex);
         } catch (JAXBException ex) {
             LOG.error("Failed to unmarshal accounts xml file '{}'. Following errors found: {}"
                     , accountsFilePath, validationEventHandler.getErrorMessage(), ex);
-            throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.load.exception.xml", accountsFilePath
-                            , validationEventHandler.getErrorMessage()), ex);
+            throw exceptionFactory.failedValidationOnLoad(accountsFilePath, validationEventHandler.getErrorMessage(), ex);
         } catch (Exception ex) {
             LOG.error("Unexpected exception during reading accounts file {}", accountsFilePath, ex);
-            throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.load.exception.unexpected", accountsFilePath), ex);
+            throw exceptionFactory.failedRead(accountsFilePath, ex);
         }
         if (validationEventHandler.isErrorDetected()) {
             LOG.error("Failed to unmarshal accounts xml file '{}'. Following errors found: {}"
                     , accountsFilePath, validationEventHandler.getErrorMessage());
-            throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.load.exception.xml", accountsFilePath
-                            , validationEventHandler.getErrorMessage()));
+            throw exceptionFactory.failedValidationOnLoad(accountsFilePath, validationEventHandler.getErrorMessage());
         }
         return accountsDto;
     }
@@ -147,27 +141,22 @@ public class AccountConfigService {
             }
         } catch (SAXException ex) {
             LOG.error("Unable to create validation schema from internal resource '{}'", ACCOUNTS_XSD_RESOURCE, ex);
-            throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.save.exception.sax"), ex);
+            throw exceptionFactory.failedSchemaCreationOnSave(ACCOUNTS_XSD_RESOURCE, ex);
         } catch (IOException ex) {
             LOG.error("Failed to save {} to file {}", accountsDto, accountsFilePath, ex);
-            throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.save.exception.io", accountsFilePath), ex);
+            throw exceptionFactory.failedWrite(accountsFilePath, ex);
         } catch (JAXBException ex) {
             LOG.error("XML marshalling exception during saving {} to file {}. Following errors found: {}"
                     , accountsDto, accountsFilePath, validationEventHandler.getErrorMessage(), ex);
-            throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.save.exception.xml", accountsFilePath), ex);
+            throw exceptionFactory.failedValidationOnSave(accountsFilePath, validationEventHandler.getErrorMessage(), ex);
         } catch (Exception ex) {
             LOG.error("Unexpected exception during saving {} to file {}", accountsDto, accountsFilePath, ex);
-            throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.save.exception.unexpected", accountsFilePath), ex);
+            throw exceptionFactory.failedWrite(accountsFilePath, ex);
         }
         if (validationEventHandler.isErrorDetected()) {
             LOG.error("XML marshalling exception during saving {} to file {}. Following errors found: {}"
                     , accountsDto, accountsFilePath, validationEventHandler.getErrorMessage());
-            throw new AccountConfigAccessException(
-                    new SystemMessage("account.config.save.exception.xml", accountsFilePath));
+            throw exceptionFactory.failedValidationOnSave(accountsFilePath, validationEventHandler.getErrorMessage());
         }
     }
 

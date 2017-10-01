@@ -7,12 +7,17 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.GridPane;
+import javafx.scene.layout.Priority;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -39,11 +44,31 @@ public class ViewFactory {
     }
 
     public DialogButton showErrorDialog(SystemMessage message, DialogButton... buttons) {
+        Alert alert = new Alert(Alert.AlertType.ERROR);
+        alert.setTitle(messageBundle.getString("error"));
+        alert.setHeaderText(null);
+        alert.setContentText(message.getMessage());
+        Label label = new Label(messageBundle.getString("error.details"));
+        TextArea textArea = new TextArea(message.getDetails());
+        textArea.setEditable(false);
+        textArea.setWrapText(true);
+        textArea.setMaxWidth(Double.MAX_VALUE);
+        textArea.setMaxHeight(Double.MAX_VALUE);
+        GridPane.setVgrow(textArea, Priority.ALWAYS);
+        GridPane.setHgrow(textArea, Priority.ALWAYS);
+        GridPane expContent = new GridPane();
+        expContent.setMaxWidth(Double.MAX_VALUE);
+        expContent.add(label, 0, 0);
+        expContent.add(textArea, 0, 1);
+        alert.getDialogPane().setExpandableContent(expContent);
         ButtonType[] buttonTypes = new ButtonType[buttons.length];
+        List<ButtonType> errorDialogButtonTypes = alert.getDialogPane().getButtonTypes();
+        errorDialogButtonTypes.clear();
         for (int i = 0; i < buttons.length; i++) {
-            buttonTypes[i] = new ButtonType(messageBundle.getString(buttons[i].getLabelKey()));
+            ButtonType buttonType = new ButtonType(messageBundle.getString(buttons[i].getLabelKey()));
+            buttonTypes[i] = buttonType;
+            errorDialogButtonTypes.add(buttonType);
         }
-        Alert alert = new Alert(Alert.AlertType.ERROR, message.getText(messageBundle), buttonTypes);
         Optional<ButtonType> pressed = alert.showAndWait();
         if (pressed.isPresent()) {
             ButtonType pressedType = pressed.get();

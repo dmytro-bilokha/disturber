@@ -18,6 +18,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -43,7 +44,8 @@ public class AccountConfigServiceTest {
         mockPropertyService = Mockito.mock(PropertyService.class);
         when(mockPropertyService.getConfigDirLocation()).thenReturn(FAKE_CONFIGDIR_LOCATION);
         setupFsServiceMockWriter();
-        accountConfigService = new AccountConfigService(mockPropertyService, mockFsService);
+        accountConfigService = new AccountConfigService(mockPropertyService, mockFsService
+                , new ExceptionFactory(ResourceBundle.getBundle("messages")));
     }
 
     private void setupFsServiceMockWriter() throws Exception {
