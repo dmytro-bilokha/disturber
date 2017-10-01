@@ -41,7 +41,7 @@ public class ViewFactory {
     public DialogButton showErrorDialog(SystemMessage message, DialogButton... buttons) {
         ButtonType[] buttonTypes = new ButtonType[buttons.length];
         for (int i = 0; i < buttons.length; i++) {
-            buttonTypes[i] = new ButtonType(buttons[i].getLabelKey());
+            buttonTypes[i] = new ButtonType(messageBundle.getString(buttons[i].getLabelKey()));
         }
         Alert alert = new Alert(Alert.AlertType.ERROR, message.getText(messageBundle), buttonTypes);
         Optional<ButtonType> pressed = alert.showAndWait();
