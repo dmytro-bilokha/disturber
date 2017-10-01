@@ -21,4 +21,8 @@ public abstract class ConteinerizedTestCase extends GuiBaseTestCase {
     protected FXMLLoader getCustomizedFXMLLoader() {
         return ContainerManager.getBeanByClass(FXMLLoader.class);
     }
+
+    protected <T> T getBeanByClass(Class<T> beanClass) {
+        return ContainerManager.getBeanByClass(beanClass);
+    }
 }

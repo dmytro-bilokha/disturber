@@ -1,5 +1,6 @@
 package com.dmytrobilokha.disturber.appeventbus;
 
+import com.dmytrobilokha.disturber.SystemMessage;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
@@ -10,14 +11,9 @@ import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 public enum AppEventType {
     MATRIX_NEW_EVENT_GOT(RoomKey.class, MatrixEvent.class)
     , MATRIX_LOGGEDIN(String.class, null)
-    , MATRIX_LOGIN_CONNECTION_FAILED(AccountConfig.class, null)
-    , MATRIX_LOGIN_FAILED(AccountConfig.class, null)
-    , MATRIX_SYNC_CONNECTION_FAILED(AccountConfig.class, null)
-    , MATRIX_SYNC_FAILED(AccountConfig.class, null)
-    , MATRIX_SYNC_UNKNOWN_FAIL(AccountConfig.class, null)
+    , MATRIX_CONNECTION_FAILED(AccountConfig.class, SystemMessage.class)
+    , MATRIX_RESPONSE_FAILED(AccountConfig.class, SystemMessage.class)
     , MATRIX_OUTGOING_MESSAGE(RoomKey.class, String.class)
-    , MATRIX_SEND_CONNECTION_FAILED(AccountConfig.class, null)
-    , MATRIX_SEND_FAILED(AccountConfig.class, null)
     ;
 
     private final Class classifierClass;

@@ -1,17 +1,18 @@
 package com.dmytrobilokha.disturber.appeventbus;
 
+import com.dmytrobilokha.disturber.SystemMessage;
 import org.junit.Test;
 
 public class AppEventTypeTest {
 
-    @Test(expected = IllegalArgumentException.class)
-    public void testThrowsOnNonNullPayloadForConnectionFailedEvent() {
-        AppEventType.MATRIX_LOGIN_CONNECTION_FAILED.validatePayload(new Object());
+    @Test
+    public void testPayloadForConnectionFailedEventOk() {
+        AppEventType.MATRIX_CONNECTION_FAILED.validatePayload(new SystemMessage("blah"));
     }
 
-    @Test
-    public void testValidatesNullPayloadForConnectionFailedEvent() {
-        AppEventType.MATRIX_LOGIN_CONNECTION_FAILED.validatePayload(null);
+    @Test(expected = IllegalArgumentException.class)
+    public void testNoNullPayloadForConnectionFailedEvent() {
+        AppEventType.MATRIX_CONNECTION_FAILED.validatePayload(null);
     }
 
     @Test(expected = IllegalArgumentException.class)

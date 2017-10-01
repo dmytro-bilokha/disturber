@@ -58,6 +58,15 @@ public class MatrixClientService {
         }
     }
 
+    public void setRetryOn(AccountConfig accountConfig) {
+        MatrixSynchronizer synchronizer = connectedAccounts.get(accountConfig.getUserId());
+        if (synchronizer == null) {
+            LOG.warn("Requested to setup retry for the account {}, but it is not connected. Will skip it.", accountConfig);
+            return;
+        }
+        synchronizer.setRetryOn();
+    }
+
     private void eventCallback() {
         AppEvent event;
         while ((event = eventQueue.pollEvent()) != null) {

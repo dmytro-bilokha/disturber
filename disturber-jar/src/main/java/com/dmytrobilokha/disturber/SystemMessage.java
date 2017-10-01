@@ -1,6 +1,7 @@
 package com.dmytrobilokha.disturber;
 
 import java.text.MessageFormat;
+import java.util.MissingResourceException;
 import java.util.ResourceBundle;
 
 /**
@@ -22,11 +23,15 @@ public class SystemMessage {
     }
 
     public String getText(ResourceBundle resourceBundle) {
-        String message = resourceBundle.getString(key);
-        if (parameters == null)
-            return message;
-        else
-            return MessageFormat.format(message, parameters);
+        try {
+            String message = resourceBundle.getString(key);
+            if (parameters == null)
+                return message;
+            else
+                return MessageFormat.format(message, parameters);
+        } catch (MissingResourceException ex) {
+            return key;
+        }
     }
 
 }

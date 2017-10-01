@@ -30,10 +30,16 @@ public class FXMLLoaderProducer {
 
     @Produces
     @Dependent
+    public ResourceBundle getMessageBundle() {
+        return ResourceBundle.getBundle("messages");
+    }
+
+    @Produces
+    @Dependent
     public FXMLLoader produce() {
         FXMLLoader fxmlLoader = new FXMLLoader();
         fxmlLoader.setControllerFactory(new ControllerFactory());
-        fxmlLoader.setResources(ResourceBundle.getBundle("messages"));
+        fxmlLoader.setResources(getMessageBundle());
         return fxmlLoader;
     }
 

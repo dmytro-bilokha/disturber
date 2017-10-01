@@ -1,5 +1,6 @@
 package com.dmytrobilokha.disturber.network;
 
+import com.dmytrobilokha.disturber.SystemMessage;
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
@@ -27,6 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * The class represents synchronizer which should be run in the separate thread and synchronizes matrix events for
  * given account.
  */
+//TODO: add tests on pause increasing on fail and on error/retry behavior
 class MatrixSynchronizer extends Thread {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixSynchronizer.class);
@@ -40,12 +42,12 @@ class MatrixSynchronizer extends Thread {
     private final MatrixEvent.Builder matrixEventBuilder = MatrixEvent.newBuilder();
 
     private State state = State.NOT_CONNECTED;
+    private boolean haveNewEvents;
     private String accessToken;
     private String nextBatchId;
-    private long networkTryNumber = 0;
-    private boolean active = true;
+    private volatile int networkTryNumber = 0;
+    private volatile boolean active = true;
     private volatile boolean keepGoing = true;
-    private boolean haveNewEvents;
 
     MatrixSynchronizer(AccountConfig accountConfig, CrossThreadEventQueue serverToAppQueue, MatrixApiConnector apiConnector) {
         this.accountConfig = accountConfig;
@@ -103,7 +105,13 @@ class MatrixSynchronizer extends Thread {
     }
 
     private void sleepPauseTime() throws InterruptedException {
-        Thread.sleep(accountConfig.getBetweenSyncPause() * networkTryNumber); //Pause increases on fail to make server's life easier
+        Thread.sleep(accountConfig.getBetweenSyncPause() * (long) networkTryNumber); //Pause increases on fail to make server's life easier
+    }
+
+    //This method to be called from the main FX application thread to recover after fail if user wants
+    public void setRetryOn() {
+        networkTryNumber = 1;
+        active = true;
     }
 
     //This method to be called from the main FX application thread to "stop the show"
@@ -122,17 +130,24 @@ class MatrixSynchronizer extends Thread {
         this.state = state;
     }
 
-    private void handleNetworkFail(AppEventType type) {
+    private void handleNetworkFail(String systemMessageKey) {
         networkTryNumber++;
         if (networkTryNumber <= MAX_TRY)
             return;
         active = false;
-        addEvent(AppEvent.withClassifier(type, accountConfig));
+        SystemMessage systemMessage = new SystemMessage(systemMessageKey, accountConfig.getUserId());
+        addEvent(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_CONNECTION_FAILED, accountConfig, systemMessage));
     }
 
-    private void handleResponseFail(AppEventType type) {
+    private void handleResponseFail(String systemMessageKey, ApiRequestException ex) {
         active = false;
-        addEvent(AppEvent.withClassifier(type, accountConfig));
+        SystemMessage systemMessage;
+        if (ex != null)
+            systemMessage = new SystemMessage(systemMessageKey, accountConfig.getUserId()
+                , ex.getApiError().getNetworkCode(), ex.getApiError().getErrorCode(), ex.getApiError().getErrorMessage());
+        else
+            systemMessage = new SystemMessage(systemMessageKey, accountConfig.getUserId());
+        addEvent(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_RESPONSE_FAILED, accountConfig, systemMessage));
     }
 
     private void login() {
@@ -144,11 +159,11 @@ class MatrixSynchronizer extends Thread {
             answerDto = apiConnector.login(loginPasswordDto);
         } catch (ApiConnectException ex) {
             LOG.error("Failed to login with {}", accountConfig, ex);
-            handleNetworkFail(AppEventType.MATRIX_LOGIN_CONNECTION_FAILED);
+            handleNetworkFail("matrix.login.connection.fail");
             return;
         } catch (ApiRequestException ex) {
             LOG.error("Failed to login with {}, got {}", accountConfig, ex.getApiError(), ex);
-            handleResponseFail(AppEventType.MATRIX_LOGIN_FAILED);
+            handleResponseFail("matrix.login.response.fail", ex);
             return;
         }
         accessToken = answerDto.getAccessToken();
@@ -186,15 +201,15 @@ class MatrixSynchronizer extends Thread {
             syncResponseDto = requestFunction.apply(apiConnector);
         } catch (ApiConnectException ex) {
             LOG.error("Failed to synchronize {} with server because of input/output error", accountConfig, ex);
-            handleNetworkFail(AppEventType.MATRIX_SYNC_CONNECTION_FAILED);
+            handleNetworkFail("matrix.sync.connection.fail");
             return;
         } catch (ApiRequestException ex) {
             LOG.error("Failed to synchronize {} with server, got {}", accountConfig, ex.getApiError(), ex);
-            handleResponseFail(AppEventType.MATRIX_SYNC_FAILED);
+            handleResponseFail("matrix.sync.response.fail", ex);
             return;
         } catch (Exception ex) {
             LOG.error("Failed to synchronize {} with server, got unexpected exception", accountConfig, ex);
-            addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNC_UNKNOWN_FAIL, accountConfig));
+            handleResponseFail("matrix.sync.unexpected.fail", null);
             return;
         }
         nextBatchId = syncResponseDto.getNextBatch();
@@ -233,11 +248,11 @@ class MatrixSynchronizer extends Thread {
                         , "m.room.message", message.getLocalId(), messageContent);
             } catch (ApiConnectException ex) {
                 LOG.error("Failed to send message {}, because of input/output error", message, ex);
-                handleNetworkFail(AppEventType.MATRIX_SEND_CONNECTION_FAILED);
+                handleNetworkFail("matrix.send.connection.fail");
                 return;
             } catch (ApiRequestException ex) {
                 LOG.error("Failed to send message {}, got {}", message, ex.getApiError(), ex);
-                handleResponseFail(AppEventType.MATRIX_SEND_FAILED);
+                handleResponseFail("matrix.send.response.fail", ex);
                 return;
             }
             appToServerQueue.poll();
