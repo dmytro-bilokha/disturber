@@ -82,7 +82,7 @@ class ExceptionFactory {
     private AccountConfigAccessException failedAccountsValidation(String message, String errors, JAXBException ex) {
         StringWriter stringWriter = new StringWriter();
         PrintWriter printWriter = new PrintWriter(stringWriter);
-        printWriter.println("following.errors");
+        printWriter.println(getMessage("following.errors"));
         printWriter.println(errors);
         if (ex != null)
             ex.printStackTrace(printWriter);
@@ -99,7 +99,7 @@ class ExceptionFactory {
     }
 
     private String getFormattedMessage(String key, Object... data) {
-        String message = null;
+        String message;
         try {
             message = messageBundle.getString(key);
         } catch (MissingResourceException ex) {

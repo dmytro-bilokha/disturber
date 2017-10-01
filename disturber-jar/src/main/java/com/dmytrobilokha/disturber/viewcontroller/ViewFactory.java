@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.ResourceBundle;
@@ -43,7 +44,21 @@ public class ViewFactory {
         messageBundle = fxmlLoaderProducer.getMessageBundle();
     }
 
+    public void showErrorAlert(SystemMessage message) {
+        createAlert(message).showAndWait();
+    }
+
     public DialogButton showErrorDialog(SystemMessage message, DialogButton... buttons) {
+        Alert alert = createAlert(message);
+        ButtonType[] buttonTypes = mapToFxButtons(buttons);
+        List<ButtonType> errorDialogButtonTypes = alert.getDialogPane().getButtonTypes();
+        errorDialogButtonTypes.clear();
+        errorDialogButtonTypes.addAll(Arrays.asList(buttonTypes));
+        Optional<ButtonType> pressed = alert.showAndWait();
+        return whichPressed(pressed, buttonTypes, buttons);
+    }
+
+    private Alert createAlert(SystemMessage message) {
         Alert alert = new Alert(Alert.AlertType.ERROR);
         alert.setTitle(messageBundle.getString("error"));
         alert.setHeaderText(null);
@@ -61,15 +76,19 @@ public class ViewFactory {
         expContent.add(label, 0, 0);
         expContent.add(textArea, 0, 1);
         alert.getDialogPane().setExpandableContent(expContent);
+        return alert;
+    }
+
+    private ButtonType[] mapToFxButtons(DialogButton[] buttons) {
         ButtonType[] buttonTypes = new ButtonType[buttons.length];
-        List<ButtonType> errorDialogButtonTypes = alert.getDialogPane().getButtonTypes();
-        errorDialogButtonTypes.clear();
         for (int i = 0; i < buttons.length; i++) {
             ButtonType buttonType = new ButtonType(messageBundle.getString(buttons[i].getLabelKey()));
             buttonTypes[i] = buttonType;
-            errorDialogButtonTypes.add(buttonType);
         }
-        Optional<ButtonType> pressed = alert.showAndWait();
+        return buttonTypes;
+    }
+
+    private DialogButton whichPressed(Optional<ButtonType> pressed, ButtonType[] buttonTypes, DialogButton[] buttons) {
         if (pressed.isPresent()) {
             ButtonType pressedType = pressed.get();
             for (int i = 0; i < buttons.length; i++) {

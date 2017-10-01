@@ -11,6 +11,7 @@ import com.dmytrobilokha.disturber.config.account.AccountConfigService;
 import com.dmytrobilokha.disturber.network.MatrixClientService;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
+import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -22,7 +23,6 @@ import javafx.scene.control.TreeView;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -40,6 +40,7 @@ public class MainLayoutController {
     private final AppEventBus appEventBus;
     private final MatrixStateService historyKeeper;
     private final AccountConfigService accountService;
+    private final ViewFactory viewFactory;
 
     private RoomKey currentRoom;
 
@@ -52,11 +53,12 @@ public class MainLayoutController {
 
     @Inject
     public MainLayoutController(MatrixClientService clientService, AppEventBus appEventBus
-            , MatrixStateService historyKeeper, AccountConfigService accountService) {
+            , MatrixStateService historyKeeper, AccountConfigService accountService, ViewFactory viewFactory) {
         this.clientService = clientService;
         this.appEventBus = appEventBus;
         this.historyKeeper = historyKeeper;
         this.accountService = accountService;
+        this.viewFactory = viewFactory;
     }
 
     @FXML
@@ -84,12 +86,12 @@ public class MainLayoutController {
             return cell;
         });
         appEventBus.subscribe(this.newRoomEventListener, AppEventType.MATRIX_NEW_EVENT_GOT);
-        List<AccountConfig> accounts = Collections.emptyList();
+        List<AccountConfig>  accounts;
         try {
-             accounts = accountService.getAccountConfigs();
+            accounts = accountService.getAccountConfigs();
         } catch (AccountConfigAccessException ex) {
-            //TODO add normal error handling
-            System.out.println("Failed to get account data:" + ex);
+            viewFactory.showErrorAlert(ex.getSystemMessage());
+            return;
         }
         clientService.connect(accounts);
     }
