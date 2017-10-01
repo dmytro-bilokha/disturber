@@ -14,9 +14,9 @@ import org.mockito.Mockito;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class MatrixEventsHistoryKeeperTest {
+public class MatrixStateServiceTest {
 
-    private MatrixEventsHistoryKeeper eventsKeeper;
+    private MatrixStateService eventsKeeper;
     private AppEventListener<RoomKey, MatrixEvent> newMatrixEventListener;
     private AppEventListener<String, Void> loginListener;
 
@@ -29,17 +29,24 @@ public class MatrixEventsHistoryKeeperTest {
         Mockito.doAnswer(invocation ->
                 loginListener = (AppEventListener<String, Void>) invocation.getArguments()[0])
                 .when(mockBus).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_LOGGEDIN));
-        eventsKeeper = new MatrixEventsHistoryKeeper(mockBus);
+        eventsKeeper = new MatrixStateService(mockBus, null, null);
 
     }
 
     @Test
     public void testSubscribesToEvents() {
         AppEventBus mockBus = Mockito.mock(AppEventBus.class);
-        MatrixEventsHistoryKeeper keeper = new MatrixEventsHistoryKeeper(mockBus);
-        Mockito.verify(mockBus, Mockito.times(2)).subscribe(Mockito.anyObject(), Mockito.anyObject());
+        MatrixStateService keeper = new MatrixStateService(mockBus, null, null);
         Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_LOGGEDIN));
         Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_NEW_EVENT_GOT));
+    }
+
+    @Test
+    public void testSubscribesToFailEvents() {
+        AppEventBus mockBus = Mockito.mock(AppEventBus.class);
+        MatrixStateService keeper = new MatrixStateService(mockBus, null, null);
+        Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_CONNECTION_FAILED));
+        Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_RESPONSE_FAILED));
     }
 
     @Test

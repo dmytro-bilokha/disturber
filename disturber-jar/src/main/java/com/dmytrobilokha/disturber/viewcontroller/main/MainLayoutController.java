@@ -1,6 +1,6 @@
 package com.dmytrobilokha.disturber.viewcontroller.main;
 
-import com.dmytrobilokha.disturber.MatrixEventsHistoryKeeper;
+import com.dmytrobilokha.disturber.MatrixStateService;
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.appeventbus.AppEventListener;
@@ -38,7 +38,7 @@ public class MainLayoutController {
     private final AppEventListener<RoomKey, MatrixEvent> newRoomEventListener = this::onMatrixEvent;
     private final MatrixClientService clientService;
     private final AppEventBus appEventBus;
-    private final MatrixEventsHistoryKeeper historyKeeper;
+    private final MatrixStateService historyKeeper;
     private final AccountConfigService accountService;
 
     private RoomKey currentRoom;
@@ -52,7 +52,7 @@ public class MainLayoutController {
 
     @Inject
     public MainLayoutController(MatrixClientService clientService, AppEventBus appEventBus
-            , MatrixEventsHistoryKeeper historyKeeper, AccountConfigService accountService) {
+            , MatrixStateService historyKeeper, AccountConfigService accountService) {
         this.clientService = clientService;
         this.appEventBus = appEventBus;
         this.historyKeeper = historyKeeper;
