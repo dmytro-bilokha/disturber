@@ -20,7 +20,11 @@ import org.junit.Test;
 import org.mockito.InOrder;
 import org.mockito.Mockito;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -161,6 +165,34 @@ public class MatrixSynchronizerTest {
         assertTrue(details.contains("404"));
         assertTrue(details.contains("ERROR_CODE"));
         assertTrue(details.contains("ERROR_MESSAGE"));
+    }
+
+    @Test(timeout = 10000)
+    public void testHandlesConnectionFail() throws ApiConnectException, ApiRequestException {
+        final AtomicInteger counter = new AtomicInteger(0);
+        final List<Long> callTimes = new ArrayList<>(5);
+        Mockito.doAnswer(invocation -> {
+            callTimes.add(System.nanoTime());
+            if (counter.incrementAndGet() >= 5)
+                synchronizer.disconnect();
+            throw new ApiConnectException("NO_CONNECT", new IOException());
+        }).when(apiConnector).login(Mockito.anyObject());
+        synchronizer.run();
+        Mockito.verify(apiConnector, Mockito.times(5)).login(Mockito.anyObject());
+        Mockito.verify(apiConnector, Mockito.times(0)).sync(Mockito.anyObject());
+        assertTrue(callTimes.size() > 2);
+        List<Long> pauseTimes = new ArrayList<>();
+        for (int i = 1; i < callTimes.size(); i++) {
+            pauseTimes.add((callTimes.get(i) - callTimes.get(i - 1))/1000000);
+        }
+        System.out.println("For betweenSyncPause=" + accountConfig.getBetweenSyncPause()
+                            + " got following on failure pauses: " + pauseTimes);
+        for (int i = 1; i < pauseTimes.size(); i++)
+            assertTrue(pauseTimes.get(i) > pauseTimes.get(i - 1));
+        AppEvent<String, SystemMessage> appEventNewMessage = getEventByType(AppEventType.MATRIX_CONNECTION_FAILED);
+        assertNotNull(appEventNewMessage);
+        String details = appEventNewMessage.getPayload().getDetails();
+        assertTrue(details.contains("NO_CONNECT"));
     }
 
     private void fillMockSyncResponse() {

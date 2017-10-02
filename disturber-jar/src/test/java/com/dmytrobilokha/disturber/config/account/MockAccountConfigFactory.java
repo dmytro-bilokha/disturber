@@ -7,7 +7,7 @@ public class MockAccountConfigFactory {
                 .serverAddress("http://my.mockserver.org/")
                 .login("LOGIN")
                 .password("PASSWORD")
-                .betweenSyncPause(1)
+                .betweenSyncPause(100)
                 .syncTimeout(2000)
                 .networkTimeout(3000)
                 .build();
@@ -18,7 +18,7 @@ public class MockAccountConfigFactory {
                 .serverAddress("http://my" + postfix + ".mockserver.org/")
                 .login("LOGIN" + postfix)
                 .password("PASSWORD" + postfix)
-                .betweenSyncPause(1)
+                .betweenSyncPause(100)
                 .syncTimeout(2000)
                 .networkTimeout(3000)
                 .build();
@@ -29,7 +29,7 @@ public class MockAccountConfigFactory {
                 .serverAddress("http://my.mockserver.org/")
                 .login("LOGIN")
                 .password("PASSWORD")
-                .betweenSyncPause(1)
+                .betweenSyncPause(100)
                 .syncTimeout(2000)
                 .networkTimeout(3000)
                 .proxyHost("my.proxy.net")

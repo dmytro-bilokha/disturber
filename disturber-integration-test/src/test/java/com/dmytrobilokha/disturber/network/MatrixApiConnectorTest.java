@@ -97,7 +97,7 @@ public class MatrixApiConnectorTest {
             assertEquals("M_FORBIDDEN", apiError.getErrorCode());
             assertNull(apiError.getErrorMessage());
         } catch (ApiConnectException ex) {
-            fail("On failed login with 403 response code, connector should throw ApiRequesException");
+            fail("On failed login with 403 response code, connector should throw ApiRequestException");
         }
 
     }
