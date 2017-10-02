@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.network;
+package com.dmytrobilokha.disturber.network.httpservermock;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -16,8 +16,12 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Collectors;
 
 /**
@@ -25,16 +29,44 @@ import java.util.stream.Collectors;
  */
 public class HttpServerMock {
 
+    private static final int MAX_TRY = 5;
+    private static final int PORT_FROM = 30000;
+    private static final int PORT_TO = 65500;
+    private static final String LOCALHOST = "http://localhost:";
+    private static final RequestCapture[] EMPTY_REQUEST_CAPTURE_ARRAY = new RequestCapture[0];
+
     private static final Logger LOG = LoggerFactory.getLogger(HttpServerMock.class);
 
     private final HttpServer server;
+    private final String baseUrl;
     private final Map<URI, Response> requestUriToOutputResourceMap = new ConcurrentHashMap<>();
-    private volatile RequestCapture requestCapture;
+    private final List<RequestCapture> requestCaptureHistory = new CopyOnWriteArrayList<>();
 
-    public HttpServerMock(String context, int port) throws IOException {
+    private HttpServerMock(String context, int port) throws IOException {
         LOG.info("Creating mock HTTP server on port {}...", port);
         this.server = HttpServer.create(new InetSocketAddress(port), 0);
         server.createContext(context, new Handler());
+        baseUrl = LOCALHOST + port + context;
+    }
+
+    public static HttpServerMock runOnRandomHiPort() {
+        Random portRandom = new Random(System.nanoTime());
+        int tryNumber = 1;
+        int[] portsTried = new int[MAX_TRY];
+        HttpServerMock httpServerMock = null;
+        while (httpServerMock == null && tryNumber <= MAX_TRY) {
+            int portNumSuggested = portRandom.nextInt(PORT_TO - PORT_FROM) + PORT_FROM;
+            portsTried[tryNumber - 1] = portNumSuggested;
+            try {
+                httpServerMock = new HttpServerMock("/", portNumSuggested);
+            } catch (IOException ex) {
+                tryNumber++;
+            }
+        }
+        if (httpServerMock == null)
+            throw new IllegalStateException("Tried " + tryNumber
+                    + " times, but failed to start mock http server. Ports tried: " + Arrays.toString(portsTried));
+        return httpServerMock;
     }
 
     public void start() {
@@ -52,12 +84,16 @@ public class HttpServerMock {
 
     public HttpServerMock reset() {
         requestUriToOutputResourceMap.clear();
-        requestCapture = null;
+        requestCaptureHistory.clear();
         return this;
     }
 
-    public RequestCapture getRequestCapture() {
-        return requestCapture;
+    public RequestCapture[] getRequestCaptureHistory() {
+        return requestCaptureHistory.toArray(EMPTY_REQUEST_CAPTURE_ARRAY);
+    }
+
+    public String getBaseUrl() {
+        return baseUrl;
     }
 
     private class Handler implements HttpHandler {
@@ -65,22 +101,22 @@ public class HttpServerMock {
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
             URI requestUri = httpExchange.getRequestURI();
-            requestCapture = new RequestCapture(requestUri
-                    , httpExchange.getRequestMethod(), extractRequestBody(httpExchange));
+            requestCaptureHistory.add(new RequestCapture(requestUri
+                    , httpExchange.getRequestMethod(), extractRequestBody(httpExchange)));
             Response mockResponse = requestUriToOutputResourceMap.get(requestUri);
             if (mockResponse == null) {
                 LOG.error("Requested URI {} has no corresponding mock json set", requestUri);
                 throw new IllegalStateException("Requested URI " + requestUri + " has no corresponding mock json set");
             }
-            URI resourceUri = null;
+            URI resourceUri;
             try {
-                resourceUri = getClass().getResource(mockResponse.resource).toURI();
+                resourceUri = getClass().getResource(mockResponse.getResource()).toURI();
             } catch (URISyntaxException e) {
-                LOG.error("Unable to get classpath resource {}", mockResponse.resource);
-                throw new IllegalStateException("Unable to get resource '" + mockResponse.resource + '\'');
+                LOG.error("Unable to get classpath resource {}", mockResponse.getResource());
+                throw new IllegalStateException("Unable to get resource '" + mockResponse.getResource() + '\'');
             }
             Path resourcePath = Paths.get(resourceUri);
-            httpExchange.sendResponseHeaders(mockResponse.statusCode, Files.size(resourcePath));
+            httpExchange.sendResponseHeaders(mockResponse.getStatusCode(), Files.size(resourcePath));
             OutputStream os = httpExchange.getResponseBody();
             Files.copy(resourcePath, os);
             os.close();
@@ -96,37 +132,4 @@ public class HttpServerMock {
         }
     }
 
-    public static class RequestCapture {
-        private final URI uri;
-        private final String method;
-        private final String body;
-
-        public RequestCapture(URI uri, String method, String body) {
-            this.uri = uri;
-            this.method = method;
-            this.body = body;
-        }
-
-        public URI getUri() {
-            return uri;
-        }
-
-        public String getMethod() {
-            return method;
-        }
-
-        public String getBody() {
-            return body;
-        }
-    }
-
-    public static class Response {
-        private final int statusCode;
-        private final String resource;
-
-        public Response(int statusCode, String resource) {
-            this.statusCode = statusCode;
-            this.resource = resource;
-        }
-    }
 }

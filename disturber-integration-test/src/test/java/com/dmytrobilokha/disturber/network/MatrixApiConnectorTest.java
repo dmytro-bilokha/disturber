@@ -5,16 +5,16 @@ import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
 import com.dmytrobilokha.disturber.network.dto.SendEventResponseDto;
 import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
+import com.dmytrobilokha.disturber.network.httpservermock.HttpServerMock;
+import com.dmytrobilokha.disturber.network.httpservermock.RequestCapture;
+import com.dmytrobilokha.disturber.network.httpservermock.Response;
 import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.Arrays;
-import java.util.Random;
 import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
@@ -25,10 +25,6 @@ import static org.junit.Assert.fail;
 
 public class MatrixApiConnectorTest {
 
-    private static final int MAX_TRY = 5;
-    private static final int PORT_FROM = 30000;
-    private static final int PORT_TO = 65500;
-    private static final String LOCALHOST = "http://localhost:";
     private static String baseUrl;
     private static final String SYNC_PATH = "_matrix/client/r0/sync";
     private static final String LOGIN_PATH = "_matrix/client/r0/login";
@@ -41,22 +37,8 @@ public class MatrixApiConnectorTest {
 
     @BeforeClass
     public static void setupServer() {
-        Random portRandom = new Random(System.nanoTime());
-        int tryNumber = 1;
-        int[] portsTried = new int[MAX_TRY];
-        while (httpServerMock == null && tryNumber <= MAX_TRY) {
-            int portNumSuggested = portRandom.nextInt(PORT_TO - PORT_FROM) + PORT_FROM;
-            portsTried[tryNumber - 1] = portNumSuggested;
-            try {
-                httpServerMock = new HttpServerMock("/", portNumSuggested);
-                baseUrl = LOCALHOST + portNumSuggested + '/';
-            } catch (IOException ex) {
-                tryNumber++;
-            }
-        }
-        if (httpServerMock == null)
-            throw new IllegalStateException("Tried " + tryNumber
-                    + " times, but failed to start mock http server. Port tried: " + Arrays.toString(portsTried));
+        httpServerMock = HttpServerMock.runOnRandomHiPort();
+        baseUrl = httpServerMock.getBaseUrl();
         httpServerMock.start();
     }
 
@@ -74,14 +56,13 @@ public class MatrixApiConnectorTest {
     @Test
     public void testLogsIn() throws Exception {
         URI loginUri = new URI("/" + LOGIN_PATH);
-        httpServerMock.setUriMock(loginUri, new HttpServerMock.Response(200, JSONSET_BASE + "login.json"));
+        httpServerMock.setUriMock(loginUri, new Response(200, JSONSET_BASE + "login.json"));
         LoginPasswordDto loginPasswordDto = new LoginPasswordDto();
         loginPasswordDto.setLogin("MY_LOGIN");
         loginPasswordDto.setPassword("MY_PASSWORD");
         apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT, null);
         LoginAnswerDto loginAnswerDto = apiConnector.login(loginPasswordDto);
-        HttpServerMock.RequestCapture requestCapture = httpServerMock.getRequestCapture();
-        assertNotNull(requestCapture);
+        RequestCapture requestCapture = getFirstAndOnlyRequestCapture();
         assertEquals("POST", requestCapture.getMethod());
         assertEquals(loginUri, requestCapture.getUri());
         String requestBody = requestCapture.getBody();
@@ -93,10 +74,16 @@ public class MatrixApiConnectorTest {
         assertEquals("SECURE_TOKEN", loginAnswerDto.getAccessToken());
     }
 
+    private RequestCapture getFirstAndOnlyRequestCapture() {
+        RequestCapture[] requestCaptures = httpServerMock.getRequestCaptureHistory();
+        assertEquals(1, requestCaptures.length);
+        return requestCaptures[0];
+    }
+
     @Test
     public void testHandlesLoginFail() throws URISyntaxException {
         URI loginUri = new URI("/" + LOGIN_PATH);
-        httpServerMock.setUriMock(loginUri, new HttpServerMock.Response(403, JSONSET_BASE + "login403.json"));
+        httpServerMock.setUriMock(loginUri, new Response(403, JSONSET_BASE + "login403.json"));
         LoginPasswordDto loginPasswordDto = new LoginPasswordDto();
         loginPasswordDto.setLogin("MY_LOGIN");
         loginPasswordDto.setPassword("MY_PASSWORD");
@@ -123,11 +110,10 @@ public class MatrixApiConnectorTest {
     @Test
     public void testSynchronizesInGeneral() throws URISyntaxException, ApiConnectException, ApiRequestException {
         URI syncUri = new URI("/" + SYNC_PATH + "?access_token=ACCESS_TOKEN");
-        httpServerMock.setUriMock(syncUri, new HttpServerMock.Response(200, JSONSET_BASE + "sync.json"));
+        httpServerMock.setUriMock(syncUri, new Response(200, JSONSET_BASE + "sync.json"));
         apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT, null);
         SyncResponseDto syncResponseDto = apiConnector.sync("ACCESS_TOKEN");
-        HttpServerMock.RequestCapture requestCapture = httpServerMock.getRequestCapture();
-        assertNotNull(requestCapture);
+        RequestCapture requestCapture = getFirstAndOnlyRequestCapture();
         assertEquals("GET", requestCapture.getMethod());
         assertEquals(syncUri, requestCapture.getUri());
         assertNotNull(syncResponseDto);
@@ -137,7 +123,7 @@ public class MatrixApiConnectorTest {
     @Test
     public void testSendsTextMessage() throws URISyntaxException, ApiConnectException, ApiRequestException {
         URI sendMessageUri = new URI("/_matrix/client/r0/rooms/!636q39766251:example.com/send/m.room.message/1?access_token=ACCESS_TOKEN");
-        httpServerMock.setUriMock(sendMessageUri, new HttpServerMock.Response(200, JSONSET_BASE + "sendMessage.json"));
+        httpServerMock.setUriMock(sendMessageUri, new Response(200, JSONSET_BASE + "sendMessage.json"));
         apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT, null);
         EventContentDto contentDto = new EventContentDto();
         contentDto.setBody("Hello World");
@@ -148,8 +134,7 @@ public class MatrixApiConnectorTest {
                 , "m.room.message"
                 , "1"
                 , contentDto);
-        HttpServerMock.RequestCapture requestCapture = httpServerMock.getRequestCapture();
-        assertNotNull(requestCapture);
+        RequestCapture requestCapture = getFirstAndOnlyRequestCapture();
         assertEquals("PUT", requestCapture.getMethod());
         assertEquals(sendMessageUri, requestCapture.getUri());
         String requestJson = requestCapture.getBody();
