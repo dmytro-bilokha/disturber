@@ -22,6 +22,7 @@ import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.when;
@@ -30,6 +31,7 @@ public class AccountConfigServiceTest {
 
     private static final String LOCATION_PREFIX = "/accountset/";
     private static final String FAKE_CONFIGDIR_LOCATION = "blablabla";
+    private static final String FAKE_ACCOUNTS = FAKE_CONFIGDIR_LOCATION + "/accounts.xml";
 
     private FsService mockFsService;
     private PropertyService mockPropertyService;
@@ -152,22 +154,38 @@ public class AccountConfigServiceTest {
         assertTrue(savedXml.contains("<betweenSyncPause>0</betweenSyncPause>"));
     }
 
-    @Test(expected = AccountConfigAccessException.class)
+    @Test
     public void testFailsOnInvalidXml() throws Exception {
         setupFsServiceMockReader("Invalid.xml");
-        List<AccountConfig> configs = accountConfigService.getAccountConfigs();
+        checkExceptionDetails(FAKE_ACCOUNTS, "syncTimeout", "integer", "valid");
     }
 
-    @Test(expected = AccountConfigAccessException.class)
+    private void checkExceptionDetails(String mainMessage, String... details) {
+        try {
+            accountConfigService.getAccountConfigs();
+        } catch (AccountConfigAccessException ex) {
+            String exceptionMessage = ex.getSystemMessage().getMessage();
+            assertTrue("SystemMessage mainMessage extracted from exception should contain string '"
+                    + mainMessage + "', but it doesn't: " + exceptionMessage,  exceptionMessage.contains(mainMessage));
+            String exceptionDetails = ex.getSystemMessage().getDetails();
+            for (String detail : details)
+                assertTrue("SystemMessage details extracted from exception should contain string '"
+                        + detail + "', but it doesn't: " + exceptionDetails,  exceptionDetails.contains(detail));
+            return;
+        }
+        fail("Expected to get exception");
+    }
+
+    @Test
     public void testVersionInXmlIsMandatory() throws Exception {
         setupFsServiceMockReader("NoVersion.xml");
-        List<AccountConfig> configs = accountConfigService.getAccountConfigs();
+        checkExceptionDetails(FAKE_ACCOUNTS, "version", "Invalid content");
     }
 
-    @Test(expected = AccountConfigAccessException.class)
+    @Test
     public void testFailsOnIOException() throws Exception {
-        setupMockFsServiceFail(new IOException());
-        accountConfigService.getAccountConfigs();
+        setupMockFsServiceFail(new IOException("EPIC_FAIL"));
+        checkExceptionDetails(FAKE_ACCOUNTS, "EPIC_FAIL");
     }
 
     private void setupMockFsServiceFail(Exception ex) throws Exception {
