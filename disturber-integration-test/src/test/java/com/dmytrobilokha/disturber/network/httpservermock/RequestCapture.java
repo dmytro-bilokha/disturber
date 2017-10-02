@@ -6,11 +6,13 @@ public class RequestCapture {
     private final URI uri;
     private final String method;
     private final String body;
+    private final long nanoTime;
 
-    public RequestCapture(URI uri, String method, String body) {
+    public RequestCapture(URI uri, String method, String body, long nanoTime) {
         this.uri = uri;
         this.method = method;
         this.body = body;
+        this.nanoTime = nanoTime;
     }
 
     public URI getUri() {
@@ -23,5 +25,9 @@ public class RequestCapture {
 
     public String getBody() {
         return body;
+    }
+
+    public long getNanoTime() {
+        return nanoTime;
     }
 }

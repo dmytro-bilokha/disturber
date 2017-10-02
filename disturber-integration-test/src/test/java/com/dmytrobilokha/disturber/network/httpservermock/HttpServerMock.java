@@ -101,8 +101,11 @@ public class HttpServerMock {
         @Override
         public void handle(HttpExchange httpExchange) throws IOException {
             URI requestUri = httpExchange.getRequestURI();
-            requestCaptureHistory.add(new RequestCapture(requestUri
-                    , httpExchange.getRequestMethod(), extractRequestBody(httpExchange)));
+            requestCaptureHistory.add(new RequestCapture(
+                    requestUri
+                    , httpExchange.getRequestMethod()
+                    , extractRequestBody(httpExchange)
+                    , System.nanoTime()));
             Response mockResponse = requestUriToOutputResourceMap.get(requestUri);
             if (mockResponse == null) {
                 LOG.error("Requested URI {} has no corresponding mock json set", requestUri);
