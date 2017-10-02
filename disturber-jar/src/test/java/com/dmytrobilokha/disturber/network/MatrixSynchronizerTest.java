@@ -1,5 +1,6 @@
 package com.dmytrobilokha.disturber.network;
 
+import com.dmytrobilokha.disturber.SystemMessage;
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
@@ -23,6 +24,7 @@ import java.util.ResourceBundle;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class MatrixSynchronizerTest {
 
@@ -45,9 +47,7 @@ public class MatrixSynchronizerTest {
     public void init() throws Exception {
         accountConfig = MockAccountConfigFactory.createMockAccountConfig();
         triggerCount = 0;
-        eventQueue = new CrossThreadEventQueue(() -> {
-            triggerCount++;
-        });
+        eventQueue = new CrossThreadEventQueue(() -> { triggerCount++; });
         apiConnector = Mockito.mock(MatrixApiConnector.class);
         exceptionConverter = new ApiExceptionToSystemMessageConverter(ResourceBundle.getBundle("messages"));
         synchronizer = new MatrixSynchronizer(accountConfig, eventQueue, apiConnector, exceptionConverter);
@@ -127,7 +127,6 @@ public class MatrixSynchronizerTest {
         assertEquals(loginAnswerDto.getUserId(), appEventLoggedIn.getClassifier());
     }
 
-
     @Test
     public void testPutsMessagesInQueue() {
         fillMockSyncResponse();
@@ -143,6 +142,25 @@ public class MatrixSynchronizerTest {
                 .serverTimestamp(1234567890L)
                 .build();
         assertEquals(expectedMatrixEvent, appEventNewMessage.getPayload());
+    }
+
+    @Test
+    public void testReportsRequestFail() throws ApiConnectException, ApiRequestException {
+        Mockito.doAnswer(invocation -> {
+            loginPasswordGot = (LoginPasswordDto) invocation.getArguments()[0];
+            synchronizer.disconnect();
+            throw new ApiRequestException("REQUEST_FAIL", new ApiError(404, "ERROR_CODE", "ERROR_MESSAGE"));
+        }).when(apiConnector).login(Mockito.anyObject());
+        synchronizer.run();
+        Mockito.verify(apiConnector, Mockito.times(1)).login(Mockito.anyObject());
+        Mockito.verify(apiConnector, Mockito.times(0)).sync(Mockito.anyObject());
+        AppEvent<String, SystemMessage> appEventNewMessage = getEventByType(AppEventType.MATRIX_RESPONSE_FAILED);
+        assertNotNull(appEventNewMessage);
+        String details = appEventNewMessage.getPayload().getDetails();
+        assertTrue(details.contains("REQUEST_FAIL"));
+        assertTrue(details.contains("404"));
+        assertTrue(details.contains("ERROR_CODE"));
+        assertTrue(details.contains("ERROR_MESSAGE"));
     }
 
     private void fillMockSyncResponse() {
