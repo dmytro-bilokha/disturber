@@ -160,6 +160,7 @@ public class MatrixSynchronizerTest {
         Mockito.verify(apiConnector, Mockito.times(0)).sync(Mockito.anyObject());
         AppEvent<String, SystemMessage> appEventNewMessage = getEventByType(AppEventType.MATRIX_RESPONSE_FAILED);
         assertNotNull(appEventNewMessage);
+        assertTrue(appEventNewMessage.getPayload().getMessage().contains(accountConfig.getUserId()));
         String details = appEventNewMessage.getPayload().getDetails();
         assertTrue(details.contains("REQUEST_FAIL"));
         assertTrue(details.contains("404"));
@@ -191,6 +192,7 @@ public class MatrixSynchronizerTest {
             assertTrue(pauseTimes.get(i) > pauseTimes.get(i - 1));
         AppEvent<String, SystemMessage> appEventNewMessage = getEventByType(AppEventType.MATRIX_CONNECTION_FAILED);
         assertNotNull(appEventNewMessage);
+        assertTrue(appEventNewMessage.getPayload().getMessage().contains(accountConfig.getUserId()));
         String details = appEventNewMessage.getPayload().getDetails();
         assertTrue(details.contains("NO_CONNECT"));
     }
