@@ -17,7 +17,6 @@ import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TreeCell;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
@@ -65,26 +64,7 @@ public class MainLayoutController {
     public void initialize() {
         messageListView.setItems(messageList);
         roomsView.setRoot(root);
-        roomsView.setCellFactory(view -> {
-            TreeCell<RoomKey> cell = new TreeCell<RoomKey>(){
-                @Override
-                protected void updateItem(RoomKey item, boolean empty) {
-                    super.updateItem(item, empty);
-                    if (empty || item == null) {
-                        setText(null);
-                        setGraphic(null);
-                    } else {
-                        setText(item.hasRoomId() ? item.getRoomId() : item.getUserId());
-                    }
-                }
-            };
-            cell.setOnMouseClicked(event -> {
-                if (event.getClickCount() == 2 && cell.getItem() != null && cell.getItem().hasRoomId())
-                    switchActiveChat(cell.getItem());
-            } );
-            cell.setEditable(false);
-            return cell;
-        });
+        roomsView.setCellFactory(new RoomsViewCellFactory(this::switchActiveChat));
         appEventBus.subscribe(this.newRoomEventListener, AppEventType.MATRIX_NEW_EVENT_GOT);
         List<AccountConfig>  accounts;
         try {

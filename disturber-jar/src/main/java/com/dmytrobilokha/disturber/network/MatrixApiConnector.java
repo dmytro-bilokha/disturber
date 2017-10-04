@@ -49,7 +49,7 @@ class MatrixApiConnector {
                 .readTimeout(networkTimeout, TimeUnit.MILLISECONDS)
                 .connectTimeout(networkTimeout, TimeUnit.MILLISECONDS)
                 .writeTimeout(networkTimeout, TimeUnit.MILLISECONDS)
-                .retryOnConnectionFailure(false);
+                .retryOnConnectionFailure(true);
         if (proxyServer != null)
             clientBuilder.proxy(new Proxy(Proxy.Type.HTTP
                     , new InetSocketAddress(proxyServer.getHost(), proxyServer.getPort())));
