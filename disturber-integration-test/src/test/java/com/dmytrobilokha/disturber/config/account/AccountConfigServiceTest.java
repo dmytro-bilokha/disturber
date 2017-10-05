@@ -1,5 +1,6 @@
 package com.dmytrobilokha.disturber.config.account;
 
+import com.dmytrobilokha.disturber.Constants;
 import com.dmytrobilokha.disturber.config.account.dto.AccountConfigDto;
 import com.dmytrobilokha.disturber.config.account.dto.AccountsDto;
 import com.dmytrobilokha.disturber.config.property.PropertyService;
@@ -31,7 +32,7 @@ public class AccountConfigServiceTest {
 
     private static final String LOCATION_PREFIX = "/accountset/";
     private static final String FAKE_CONFIGDIR_LOCATION = "blablabla";
-    private static final String FAKE_ACCOUNTS = FAKE_CONFIGDIR_LOCATION + "/accounts.xml";
+    private static final String FAKE_ACCOUNTS = FAKE_CONFIGDIR_LOCATION + Constants.FILE_SEPARATOR + "accounts.xml";
 
     private FsService mockFsService;
     private PropertyService mockPropertyService;
