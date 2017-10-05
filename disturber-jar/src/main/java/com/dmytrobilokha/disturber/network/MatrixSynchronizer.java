@@ -28,7 +28,6 @@ import java.util.concurrent.atomic.AtomicLong;
  * The class represents synchronizer which should be run in the separate thread and synchronizes matrix events for
  * given account.
  */
-//TODO: add tests on pause increasing on fail and on error/retry behavior
 class MatrixSynchronizer extends Thread {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixSynchronizer.class);
@@ -108,7 +107,7 @@ class MatrixSynchronizer extends Thread {
     }
 
     private void sleepPauseTime() throws InterruptedException {
-        Thread.sleep(accountConfig.getBetweenSyncPause() * (long) networkTryNumber); //Pause increases on fail to make server's life easier
+        Thread.sleep(accountConfig.getBetweenSyncPause() * (2L * networkTryNumber - 1)); //Pause increases on fail to make server's life easier
     }
 
     //This method to be called from the main FX application thread to recover after fail if user wants
