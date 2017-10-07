@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -46,15 +45,13 @@ public class MatrixClientService {
         appEventBus.subscribe(outgoingMessageListener, AppEventType.MATRIX_OUTGOING_MESSAGE);
     }
 
-    public void connect(Collection<AccountConfig> accountConfigs) {
-        for (AccountConfig accountConfig : accountConfigs) {
-            if (!connectedAccounts.containsKey(accountConfig.getUserId())) {
-                MatrixSynchronizer synchronizer = synchronizerFactory.createMatrixSynchronizer(accountConfig, eventQueue);
-                connectedAccounts.put(accountConfig.getUserId(), synchronizer);
-                synchronizer.start();
-            } else {
-                LOG.warn("Requested to connect to already connected account {}. Will skip it.", accountConfig);
-            }
+    public void connect(AccountConfig accountConfig) {
+        if (!connectedAccounts.containsKey(accountConfig.getUserId())) {
+            MatrixSynchronizer synchronizer = synchronizerFactory.createMatrixSynchronizer(accountConfig, eventQueue);
+            connectedAccounts.put(accountConfig.getUserId(), synchronizer);
+            synchronizer.start();
+        } else {
+            LOG.warn("Requested to connect to already connected account {}. Will skip it.", accountConfig);
         }
     }
 

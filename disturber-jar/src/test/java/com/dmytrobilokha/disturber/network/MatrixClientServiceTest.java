@@ -54,25 +54,22 @@ public class MatrixClientServiceTest {
 
     @Test
     public void testConnects() {
-        AccountConfig mockConfig1 = MockAccountConfigFactory.createMockAccountConfig("1");
-        AccountConfig mockConfig2 = MockAccountConfigFactory.createMockAccountConfig("2");
-        clientService.connect(Arrays.asList(mockConfig1, mockConfig2));
-        Mockito.verify(synchronizerFactory, Mockito.times(2)).createMatrixSynchronizer(Mockito.anyObject(), Mockito.anyObject());
-        assertEquals(2, accountConfigsConnected.size());
-        assertTrue(accountConfigsConnected.get(0) == mockConfig1);
-        assertTrue(accountConfigsConnected.get(1) == mockConfig2);
-        assertEquals(2, mockSynchronizers.size());
+        AccountConfig mockConfig = MockAccountConfigFactory.createMockAccountConfig("1");
+        clientService.connect(mockConfig);
+        Mockito.verify(synchronizerFactory, Mockito.times(1)).createMatrixSynchronizer(Mockito.anyObject(), Mockito.anyObject());
+        assertEquals(1, accountConfigsConnected.size());
+        assertTrue(accountConfigsConnected.get(0) == mockConfig);
+        assertEquals(1, mockSynchronizers.size());
         mockSynchronizers.forEach(synchronizer -> Mockito.verify(synchronizer, Mockito.times(1)).start());
     }
 
     @Test
     public void testConnectsOnlyOnce() {
-        AccountConfig mockConfig1 = MockAccountConfigFactory.createMockAccountConfig("1");
-        AccountConfig mockConfig2 = MockAccountConfigFactory.createMockAccountConfig("2");
-        clientService.connect(Arrays.asList(mockConfig1, mockConfig2));
-        clientService.connect(Arrays.asList(mockConfig2, mockConfig1));
-        Mockito.verify(synchronizerFactory, Mockito.times(2)).createMatrixSynchronizer(Mockito.anyObject(), Mockito.anyObject());
-        assertEquals(2, accountConfigsConnected.size());
+        AccountConfig mockConfig = MockAccountConfigFactory.createMockAccountConfig("1");
+        clientService.connect(mockConfig);
+        clientService.connect(mockConfig);
+        Mockito.verify(synchronizerFactory, Mockito.times(1)).createMatrixSynchronizer(Mockito.anyObject(), Mockito.anyObject());
+        assertEquals(1, accountConfigsConnected.size());
     }
 
     @Test

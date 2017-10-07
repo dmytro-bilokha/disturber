@@ -3,12 +3,16 @@ package com.dmytrobilokha.disturber.viewcontroller;
 import com.dmytrobilokha.disturber.SystemMessage;
 import com.dmytrobilokha.disturber.boot.FXMLLoaderProducer;
 import com.dmytrobilokha.disturber.viewcontroller.main.MainLayoutController;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.control.Alert;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TreeItem;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import org.slf4j.Logger;
@@ -97,6 +101,26 @@ public class ViewFactory {
             }
         }
         return DialogButton.NONE;
+    }
+
+    public <T> ObservableList<T> createList() {
+        return FXCollections.observableArrayList();
+    }
+
+    public <T> TreeItem<T> createTreeRoot() {
+        return new TreeItem<>();
+    }
+
+    public <T> TreeItem<T> createTreeItem(T value, TreeItem<T> parent) {
+        TreeItem<T> treeItem = new TreeItem<>(value);
+        treeItem.setExpanded(true);
+        parent.getChildren().add(treeItem);
+        return treeItem;
+    }
+
+    public <T> void updateView(TreeItem<T> treeItem) {
+        TreeItem.TreeModificationEvent<T> event = new TreeItem.TreeModificationEvent<>(TreeItem.valueChangedEvent(), treeItem);
+        Event.fireEvent(treeItem, event);
     }
 
     public Parent produceMainLayout() {

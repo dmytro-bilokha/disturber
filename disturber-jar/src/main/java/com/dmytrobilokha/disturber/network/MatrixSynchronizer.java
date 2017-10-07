@@ -210,9 +210,10 @@ class MatrixSynchronizer extends Thread {
             return;
         }
         nextBatchId = syncResponseDto.getNextBatch();
+        handleChangeState(State.SYNCED);
+        addEvent(AppEvent.withClassifier(AppEventType.MATRIX_SYNCED, accountConfig.getUserId()));
         List<AppEvent> events = mapSyncResponseDtoToAppEvents(syncResponseDto);
         addEvents(events);
-        handleChangeState(State.SYNCED);
     }
 
     private List<AppEvent> mapSyncResponseDtoToAppEvents(SyncResponseDto syncResponseDto) {

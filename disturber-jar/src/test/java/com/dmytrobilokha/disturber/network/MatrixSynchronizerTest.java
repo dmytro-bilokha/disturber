@@ -124,7 +124,6 @@ public class MatrixSynchronizerTest {
     @Test
     public void testReportsLogin() {
         synchronizer.run();
-        assertEquals(1, triggerCount);
         AppEvent<String, Void> appEventLoggedIn = eventQueue.pollEvent();
         assertNotNull(appEventLoggedIn);
         assertEquals(AppEventType.MATRIX_LOGGEDIN, appEventLoggedIn.getType());
