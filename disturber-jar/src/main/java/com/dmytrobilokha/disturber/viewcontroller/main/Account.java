@@ -1,8 +1,8 @@
 package com.dmytrobilokha.disturber.viewcontroller.main;
 
-import com.dmytrobilokha.disturber.chatstate.AccountState;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
+import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
@@ -13,38 +13,48 @@ class Account implements RoomsViewItem {
 
     private final TreeItem<RoomsViewItem> treeItem;
     private final ViewFactory viewFactory;
-    private final String userId;
+    private final AccountConfig accountConfig;
     private final AccountRooms accountRooms;
 
     private AccountState state;
 
-    Account(String userId, ViewFactory viewFactory, TreeItem<RoomsViewItem> fatherItem, Consumer<ObservableList<String>> switchChat) {
-        this.userId = userId;
+    Account(AccountConfig accountConfig, ViewFactory viewFactory, TreeItem<RoomsViewItem> fatherItem
+            , Consumer<ObservableList<String>> switchChat) {
+        this.accountConfig = accountConfig;
         this.viewFactory = viewFactory;
         this.treeItem = viewFactory.createTreeItem(this, fatherItem);
         this.accountRooms = new AccountRooms(viewFactory, this.treeItem, switchChat);
     }
 
-    void setState(AccountState state) {
-        this.state = state;
-        viewFactory.updateView(treeItem);
+    Account setState(AccountState state) {
+        if (this.state != state) {
+            this.state = state;
+            viewFactory.updateView(treeItem);
+        }
+        return this;
     }
 
-    void reset() {
+    AccountState getState() {
+        return state;
+    }
+
+    AccountConfig getAccountConfig() {
+        return accountConfig;
+    }
+
+    Account reset() {
         accountRooms.reset();
+        return this;
     }
 
-    void addNewRoom(RoomKey roomKey) {
-        accountRooms.addNewRoom(roomKey);
-    }
-
-    void onEvent(RoomKey roomKey, MatrixEvent event) {
+    Account onEvent(RoomKey roomKey, MatrixEvent event) {
         accountRooms.onEvent(roomKey, event);
+        return this;
     }
 
     @Override
     public String getText() {
-        return userId + (state == null ? "" : (" (" + state.toString() + ')'));
+        return accountConfig.getUserId() + (state == null ? "" : (" (" + state.toString() + ')'));
     }
 
 }

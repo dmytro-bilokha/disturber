@@ -6,6 +6,8 @@ import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
 import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 
+import java.time.LocalDateTime;
+
 
 class Room implements RoomsViewItem {
 
@@ -27,11 +29,29 @@ class Room implements RoomsViewItem {
     }
 
     void onEvent(MatrixEvent event) {
-        eventsList.add(event.getContent());
+        eventsList.add(formatEvent(event));
         if (!active) {
             unreadMessages++;
             viewFactory.updateView(treeItem);
         }
+    }
+
+    private String formatEvent(MatrixEvent event) {
+        StringBuilder eventBuilder = new StringBuilder();
+        LocalDateTime timestamp = event.getServerTimestamp();
+        if (timestamp != null)
+            eventBuilder
+                    .append('(')
+                    .append(timestamp.getHour())
+                    .append(':')
+                    .append(timestamp.getMinute())
+                    .append(')');
+        eventBuilder
+                .append(' ')
+                .append(event.getSender())
+                .append(": ")
+                .append(event.getContent());
+        return eventBuilder.toString();
     }
 
     void setActive(boolean active) {

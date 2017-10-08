@@ -29,13 +29,17 @@ class AccountRooms implements RoomsViewItem {
         treeItem.getChildren().clear();
     }
 
-    void addNewRoom(RoomKey roomKey) {
+    private Room addNewRoom(RoomKey roomKey) {
         Room room = new Room(roomKey, viewFactory, treeItem, this);
         roomMap.put(roomKey, room);
+        return room;
     }
 
     void onEvent(RoomKey roomKey, MatrixEvent event) {
-        roomMap.get(roomKey).onEvent(event);
+        Room room = roomMap.get(roomKey);
+        if (room == null)
+            room = addNewRoom(roomKey);
+        room.onEvent(event);
     }
 
     void onMouseClick(Room roomToActivate) {

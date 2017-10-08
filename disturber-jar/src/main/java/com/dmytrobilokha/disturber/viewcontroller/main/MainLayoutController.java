@@ -1,6 +1,5 @@
 package com.dmytrobilokha.disturber.viewcontroller.main;
 
-import com.dmytrobilokha.disturber.chatstate.MatrixStateService;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.config.account.AccountConfigService;
@@ -21,7 +20,7 @@ import java.util.List;
 @Dependent
 public class MainLayoutController {
 
-    private final MatrixStateService matrixStateService;
+    private final MatrixStateManager matrixStateManager;
     private final AccountConfigService accountService;
     private final ViewFactory viewFactory;
 
@@ -33,16 +32,14 @@ public class MainLayoutController {
     private TextArea messageTyped;
 
     @Inject
-    public MainLayoutController(MatrixStateService matrixStateService, AccountConfigService accountService, ViewFactory viewFactory) {
-        this.matrixStateService = matrixStateService;
+    public MainLayoutController(MatrixStateManager matrixStateManager, AccountConfigService accountService, ViewFactory viewFactory) {
+        this.matrixStateManager = matrixStateManager;
         this.accountService = accountService;
         this.viewFactory = viewFactory;
     }
 
     @FXML
     public void initialize() {
-        RoomsViewHandler roomsViewHandler = new RoomsViewHandler(viewFactory, roomsView, this::switchActiveChat);
-        matrixStateService.setRoomsView(roomsViewHandler);
         roomsView.setCellFactory(new RoomsViewCellFactory());
         List<AccountConfig>  accounts;
         try {
@@ -51,7 +48,8 @@ public class MainLayoutController {
             viewFactory.showErrorAlert(ex.getSystemMessage());
             return;
         }
-        accounts.forEach(matrixStateService::connect);
+        matrixStateManager.attachToView(roomsView, this::switchActiveChat);
+        accounts.forEach(matrixStateManager::connect);
     }
 
     public void sendButtonHandler() {

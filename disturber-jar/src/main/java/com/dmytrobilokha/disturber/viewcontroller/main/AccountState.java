@@ -1,4 +1,4 @@
-package com.dmytrobilokha.disturber.chatstate;
+package com.dmytrobilokha.disturber.viewcontroller.main;
 
 public enum AccountState {
     CONNECTING
