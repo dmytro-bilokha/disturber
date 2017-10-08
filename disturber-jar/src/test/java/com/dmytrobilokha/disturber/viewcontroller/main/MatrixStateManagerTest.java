@@ -32,14 +32,14 @@ public class MatrixStateManagerTest {
         Mockito.doAnswer(invocation ->
                 loginListener = (AppEventListener<String, Void>) invocation.getArguments()[0])
                 .when(mockBus).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_LOGGEDIN));
-        eventsKeeper = new MatrixStateManager(mockBus, null, null);
+        eventsKeeper = new MatrixStateManager(mockBus, null);
 
     }
 
     @Test
     public void testSubscribesToEvents() {
         AppEventBus mockBus = Mockito.mock(AppEventBus.class);
-        MatrixStateManager keeper = new MatrixStateManager(mockBus, null, null);
+        MatrixStateManager keeper = new MatrixStateManager(mockBus, null);
         Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_LOGGEDIN));
         Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_NEW_EVENT_GOT));
     }
@@ -47,7 +47,7 @@ public class MatrixStateManagerTest {
     @Test
     public void testSubscribesToFailEvents() {
         AppEventBus mockBus = Mockito.mock(AppEventBus.class);
-        MatrixStateManager keeper = new MatrixStateManager(mockBus, null, null);
+        MatrixStateManager keeper = new MatrixStateManager(mockBus, null);
         Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_CONNECTION_FAILED));
         Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_RESPONSE_FAILED));
     }

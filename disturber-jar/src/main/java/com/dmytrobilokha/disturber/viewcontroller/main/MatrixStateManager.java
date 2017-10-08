@@ -8,7 +8,6 @@ import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
-import com.dmytrobilokha.disturber.network.MatrixClientService;
 import com.dmytrobilokha.disturber.viewcontroller.DialogButton;
 import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
 import javafx.scene.control.TreeItem;
@@ -35,14 +34,12 @@ public class MatrixStateManager {
     private final Map<String, Account> accountMap = new HashMap<>();
     private final AppEventBus eventBus;
     private final ViewFactory viewFactory;
-    private final MatrixClientService matrixClientService;
     private Consumer<Room> switchChat;
 
     @Inject
-    MatrixStateManager(AppEventBus eventBus, ViewFactory viewFactory, MatrixClientService matrixClientService) {
+    MatrixStateManager(AppEventBus eventBus, ViewFactory viewFactory) {
         this.eventBus = eventBus;
         this.viewFactory = viewFactory;
-        this.matrixClientService = matrixClientService;
         this.root = viewFactory.createTreeRoot();
         eventBus.subscribe(newMatrixEventListener, AppEventType.MATRIX_NEW_EVENT_GOT);
         eventBus.subscribe(loginListener, AppEventType.MATRIX_LOGGEDIN);
@@ -79,13 +76,13 @@ public class MatrixStateManager {
         Account account = new Account(accountConfig, viewFactory, root, switchChat);
         accountMap.put(accountConfig.getUserId(), account);
         account.setState(AccountState.CONNECTING);
-        matrixClientService.connect(accountConfig);
+        eventBus.fire(AppEvent.withPayload(AppEventType.MATRIX_CMD_CONNECT, accountConfig));
         return account;
     }
 
     private void retryAccountConnect(Account account) {
         account.setState(AccountState.CONNECTING);
-        matrixClientService.setRetryOn(account.getAccountConfig());
+        eventBus.fire(AppEvent.withPayload(AppEventType.MATRIX_CMD_RETRY, account.getAccountConfig()));
     }
 
     private void handleLogin(AppEvent<String, Void> loginEvent) {

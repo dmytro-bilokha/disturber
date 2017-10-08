@@ -12,6 +12,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.annotation.PreDestroy;
 import javax.enterprise.context.ApplicationScoped;
+import javax.enterprise.context.Initialized;
+import javax.enterprise.event.Observes;
 import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
@@ -27,6 +29,8 @@ public class MatrixClientService {
 
     private final Map<String, MatrixSynchronizer> connectedAccounts = new HashMap<>();
     private final AppEventListener<RoomKey, String> outgoingMessageListener = this::enqueueOutgoingMessage;
+    private final AppEventListener<Void, AccountConfig> connectCommandListener = this::connect;
+    private final AppEventListener<Void, AccountConfig> retryCommandListener = this::setRetryOn;
 
     private CrossThreadEventQueue eventQueue;
 
@@ -38,14 +42,17 @@ public class MatrixClientService {
     }
 
     @Inject
-    public MatrixClientService(AppEventBus appEventBus, MatrixSynchronizerFactory synchronizerFactory) {
+    MatrixClientService(AppEventBus appEventBus, MatrixSynchronizerFactory synchronizerFactory) {
         this.appEventBus = appEventBus;
         this.synchronizerFactory = synchronizerFactory;
         this.eventQueue = synchronizerFactory.createCrossThreadEventQueue(this::eventCallback);
         appEventBus.subscribe(outgoingMessageListener, AppEventType.MATRIX_OUTGOING_MESSAGE);
+        appEventBus.subscribe(connectCommandListener, AppEventType.MATRIX_CMD_CONNECT);
+        appEventBus.subscribe(retryCommandListener, AppEventType.MATRIX_CMD_RETRY);
     }
 
-    public void connect(AccountConfig accountConfig) {
+    private void connect(AppEvent<Void, AccountConfig> connectEvent) {
+        AccountConfig accountConfig = connectEvent.getPayload();
         if (!connectedAccounts.containsKey(accountConfig.getUserId())) {
             MatrixSynchronizer synchronizer = synchronizerFactory.createMatrixSynchronizer(accountConfig, eventQueue);
             connectedAccounts.put(accountConfig.getUserId(), synchronizer);
@@ -55,7 +62,8 @@ public class MatrixClientService {
         }
     }
 
-    public void setRetryOn(AccountConfig accountConfig) {
+    private void setRetryOn(AppEvent<Void, AccountConfig> retryEvent) {
+        AccountConfig accountConfig = retryEvent.getPayload();
         MatrixSynchronizer synchronizer = connectedAccounts.get(accountConfig.getUserId());
         if (synchronizer == null) {
             LOG.warn("Requested to setup retry for the account {}, but it is not connected. Will skip it.", accountConfig);
@@ -86,6 +94,11 @@ public class MatrixClientService {
     @PreDestroy
     void shutDown() {
         connectedAccounts.values().forEach(MatrixSynchronizer::disconnect);
+    }
+
+    public void eagerInit(@Observes @Initialized(ApplicationScoped.class) Object initEvent) {
+        //The methods does nothing. We need it just to ensure a CDI framework initializes the bean eagerly.
+        //Because this bean is not used directly (only via messaging) without this method it won't be initialized.
     }
 
 }
