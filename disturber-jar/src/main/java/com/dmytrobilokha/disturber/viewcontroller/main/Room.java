@@ -66,6 +66,10 @@ class Room implements RoomsViewItem {
         return eventsList;
     }
 
+    RoomKey getRoomKey() {
+        return roomKey;
+    }
+
     @Override
     public String getText() {
         return roomKey.getRoomId() + (unreadMessages == 0 ? "" : " (" + unreadMessages + ')');

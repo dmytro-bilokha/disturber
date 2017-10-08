@@ -11,7 +11,6 @@ import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.network.MatrixClientService;
 import com.dmytrobilokha.disturber.viewcontroller.DialogButton;
 import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
-import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 import javafx.scene.control.TreeView;
 
@@ -37,7 +36,7 @@ public class MatrixStateManager {
     private final AppEventBus eventBus;
     private final ViewFactory viewFactory;
     private final MatrixClientService matrixClientService;
-    private Consumer<ObservableList<String>> switchChat;
+    private Consumer<Room> switchChat;
 
     @Inject
     MatrixStateManager(AppEventBus eventBus, ViewFactory viewFactory, MatrixClientService matrixClientService) {
@@ -52,7 +51,7 @@ public class MatrixStateManager {
         eventBus.subscribe(failListener, AppEventType.MATRIX_RESPONSE_FAILED);
     }
 
-    void attachToView(TreeView<RoomsViewItem> view, Consumer<ObservableList<String>> switchChat) {
+    void attachToView(TreeView<RoomsViewItem> view, Consumer<Room> switchChat) {
         this.switchChat = switchChat;
         view.setShowRoot(false);
         view.setEditable(false);
@@ -70,6 +69,10 @@ public class MatrixStateManager {
             retryAccountConnect(account);
             return;
         }
+    }
+
+    void sendMessage(RoomKey roomKey, String message) {
+        eventBus.fire(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_OUTGOING_MESSAGE, roomKey, message));
     }
 
     private Account addNewAccount(AccountConfig accountConfig) {

@@ -4,7 +4,6 @@ import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
-import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 
 import java.util.function.Consumer;
@@ -19,7 +18,7 @@ class Account implements RoomsViewItem {
     private AccountState state;
 
     Account(AccountConfig accountConfig, ViewFactory viewFactory, TreeItem<RoomsViewItem> fatherItem
-            , Consumer<ObservableList<String>> switchChat) {
+            , Consumer<Room> switchChat) {
         this.accountConfig = accountConfig;
         this.viewFactory = viewFactory;
         this.treeItem = viewFactory.createTreeItem(this, fatherItem);

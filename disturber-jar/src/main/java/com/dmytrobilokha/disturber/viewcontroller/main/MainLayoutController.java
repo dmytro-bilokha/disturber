@@ -1,10 +1,10 @@
 package com.dmytrobilokha.disturber.viewcontroller.main;
 
+import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.account.AccountConfigAccessException;
 import com.dmytrobilokha.disturber.config.account.AccountConfigService;
 import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
-import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
@@ -24,6 +24,8 @@ public class MainLayoutController {
     private final AccountConfigService accountService;
     private final ViewFactory viewFactory;
 
+    private RoomKey currentRoomKey;
+
     @FXML
     private TreeView<RoomsViewItem> roomsView;
     @FXML
@@ -32,7 +34,8 @@ public class MainLayoutController {
     private TextArea messageTyped;
 
     @Inject
-    public MainLayoutController(MatrixStateManager matrixStateManager, AccountConfigService accountService, ViewFactory viewFactory) {
+    public MainLayoutController(MatrixStateManager matrixStateManager, AccountConfigService accountService
+            , ViewFactory viewFactory) {
         this.matrixStateManager = matrixStateManager;
         this.accountService = accountService;
         this.viewFactory = viewFactory;
@@ -53,11 +56,15 @@ public class MainLayoutController {
     }
 
     public void sendButtonHandler() {
-        return;
+        if (currentRoomKey == null || messageTyped.getText().isEmpty())
+            return;
+        matrixStateManager.sendMessage(currentRoomKey, messageTyped.getText());
+        messageTyped.clear();
     }
 
-    private void switchActiveChat(ObservableList<String> eventsList) {
-        messageListView.setItems(eventsList);
+    private void switchActiveChat(Room room) {
+        messageListView.setItems(room.getEventsList());
+        currentRoomKey = room.getRoomKey();
     }
 
 }

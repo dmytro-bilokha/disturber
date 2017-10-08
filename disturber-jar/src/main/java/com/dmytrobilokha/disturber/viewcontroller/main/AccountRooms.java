@@ -3,7 +3,6 @@ package com.dmytrobilokha.disturber.viewcontroller.main;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
-import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 
 import java.util.HashMap;
@@ -13,11 +12,11 @@ import java.util.function.Consumer;
 class AccountRooms implements RoomsViewItem {
 
     private final ViewFactory viewFactory;
-    private final Consumer<ObservableList<String>> switchChat;
+    private final Consumer<Room> switchChat;
     private final TreeItem<RoomsViewItem> treeItem;
     private final Map<RoomKey, Room> roomMap;
 
-    AccountRooms(ViewFactory viewFactory, TreeItem<RoomsViewItem> fatherItem, Consumer<ObservableList<String>> switchChat) {
+    AccountRooms(ViewFactory viewFactory, TreeItem<RoomsViewItem> fatherItem, Consumer<Room> switchChat) {
         this.viewFactory = viewFactory;
         this.switchChat = switchChat;
         this.treeItem = viewFactory.createTreeItem(this, fatherItem);
@@ -46,7 +45,7 @@ class AccountRooms implements RoomsViewItem {
         for (Room room : roomMap.values()) {
             if (room == roomToActivate) {
                 room.setActive(true);
-                switchChat.accept(room.getEventsList());
+                switchChat.accept(room);
             } else {
                 room.setActive(false);
             }
