@@ -7,6 +7,7 @@ import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.account.MockAccountConfigFactory;
+import com.dmytrobilokha.disturber.mockutil.AppEventBusMocker;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -27,11 +28,7 @@ public class MatrixClientServiceTest {
     private MatrixSynchronizerFactory synchronizerFactory;
     private Runnable clientEventCallback;
     private CrossThreadEventQueue queue;
-    private AppEventBus mockBus;
-    private final List<AppEventListener> subscribedListeners = new ArrayList<>();
-    private final List<AppEventType> subscribedEventTypes = new ArrayList<>();
-    private final List<Object> subscribedClassifiers = new ArrayList<>();
-    private final List<AppEvent> eventsFired = new ArrayList<>();
+    private final AppEventBusMocker busMocker = new AppEventBusMocker();
     private final List<MatrixSynchronizer> mockSynchronizers = new ArrayList<>();
     private final List<AccountConfig> accountConfigsConnected = new ArrayList<>();
 
@@ -39,14 +36,14 @@ public class MatrixClientServiceTest {
     public void init() {
         queue = new CrossThreadEventQueue(() -> {});
         setupSynchronizerFactoryMock();
-        setupEventBusMock();
-        clientService = new MatrixClientService(mockBus, synchronizerFactory);
+        busMocker.init();
+        clientService = new MatrixClientService(busMocker.getMockBus(), synchronizerFactory);
     }
 
     @After
     public void cleanup() {
         cleanupSynchronizerFactory();
-        cleanupEventBus();
+        busMocker.clear();
     }
 
     private void setupSynchronizerFactoryMock() {
@@ -68,42 +65,15 @@ public class MatrixClientServiceTest {
         accountConfigsConnected.clear();
     }
 
-    private void setupEventBusMock() {
-        mockBus = Mockito.mock(AppEventBus.class);
-        Mockito.doAnswer(invocation -> {
-            subscribedListeners.add((AppEventListener) invocation.getArguments()[0]);
-            subscribedEventTypes.add((AppEventType) invocation.getArguments()[1]);
-            subscribedClassifiers.add(invocation.getArguments()[2]);
-            return -1;
-        }).when(mockBus).subscribe(anyObject(), anyObject(), anyObject());
-        Mockito.doAnswer(invocation -> {
-            subscribedListeners.add((AppEventListener) invocation.getArguments()[0]);
-            subscribedEventTypes.add((AppEventType) invocation.getArguments()[1]);
-            subscribedClassifiers.add(null);
-            return -1;
-        }).when(mockBus).subscribe(anyObject(), anyObject());
-        Mockito.doAnswer(invocation -> {
-            eventsFired.add((AppEvent) invocation.getArguments()[0]);
-            return -1;
-        }).when(mockBus).fire(anyObject());
-    }
-
-    private void cleanupEventBus() {
-        subscribedListeners.clear();
-        subscribedClassifiers.clear();
-        subscribedEventTypes.clear();
-        eventsFired.clear();
-    }
-
     @Test
     public void testOnStartSubscribes() {
         List<AppEventType> eventTypesToSubscribe = Arrays.asList(AppEventType.MATRIX_OUTGOING_MESSAGE
                                                                 , AppEventType.MATRIX_CMD_CONNECT
                                                                 , AppEventType.MATRIX_CMD_RETRY);
-        assertEquals(eventTypesToSubscribe.size(), subscribedEventTypes.size());
-        eventTypesToSubscribe.forEach(eventType -> assertTrue(subscribedEventTypes.contains(eventType)));
-        subscribedClassifiers.forEach(classifier -> assertTrue(classifier == null));
-        subscribedListeners.forEach(listener -> assertTrue(listener != null));
+        assertEquals(eventTypesToSubscribe.size(), busMocker.getSubscribedEventTypes().size());
+        eventTypesToSubscribe.forEach(eventType -> assertTrue(busMocker.getSubscribedEventTypes().contains(eventType)));
+        busMocker.getSubscribedClassifiers().forEach(classifier -> assertTrue(classifier == null));
+        busMocker.getSubscribedListeners().forEach(listener -> assertTrue(listener != null));
     }
 
     @Test
@@ -125,10 +95,10 @@ public class MatrixClientServiceTest {
     }
 
     private AppEventListener findSubscriber(AppEventType eventType) {
-        for (int i = 0; i < subscribedEventTypes.size(); i++) {
-            AppEventType subscribedEventType = subscribedEventTypes.get(i);
+        for (int i = 0; i < busMocker.getSubscribedEventTypes().size(); i++) {
+            AppEventType subscribedEventType = busMocker.getSubscribedEventTypes().get(i);
             if (subscribedEventType == eventType)
-                return subscribedListeners.get(i);
+                return busMocker.getSubscribedListeners().get(i);
         }
         return null;
     }
@@ -151,9 +121,9 @@ public class MatrixClientServiceTest {
         queue.addEvent(event2);
         clientEventCallback.run();
         assertTrue(queue.pollEvent() == null); //Queue should be empty
-        assertEquals(2, eventsFired.size());
-        assertEquals(event1, eventsFired.get(0));
-        assertEquals(event2, eventsFired.get(1));
+        assertEquals(2, busMocker.getEventsFired().size());
+        assertEquals(event1, busMocker.getEventsFired().get(0));
+        assertEquals(event2, busMocker.getEventsFired().get(1));
     }
 
     @Test
