@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
 class MatrixSynchronizer extends Thread {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixSynchronizer.class);
-    private static final int MAX_TRY = 5;
+    private static final int MAX_WAIT_MULTIPLIER = 5;
 
     private final Queue<OutgoingMessage> appToServerQueue = new ConcurrentLinkedQueue<>();
     private final AtomicLong messageId = new AtomicLong();
@@ -40,13 +40,12 @@ class MatrixSynchronizer extends Thread {
     private final MatrixApiConnector apiConnector;
     private final ApiExceptionToSystemMessageConverter exceptionConverter;
     private final MatrixEvent.Builder matrixEventBuilder = MatrixEvent.newBuilder();
+    private final ConnectionRetryStateHolder retryStateHolder;
 
     private State state = State.NOT_CONNECTED;
     private boolean haveNewEvents;
     private String accessToken;
     private String nextBatchId;
-    private volatile int networkTryNumber = 0;
-    private volatile boolean active = true;
     private volatile boolean keepGoing = true;
 
     MatrixSynchronizer(AccountConfig accountConfig, CrossThreadEventQueue serverToAppQueue
@@ -56,13 +55,12 @@ class MatrixSynchronizer extends Thread {
         this.apiConnector = apiConnector;
         this.exceptionConverter = exceptionConverter;
         setName(this.getClass().getSimpleName() + "-" + accountConfig.getUserId());
+        this.retryStateHolder = new ConnectionRetryStateHolder(accountConfig.getBetweenSyncPause());
     }
 
     @Override
     public void run() {
         while (keepGoing) {
-            talkToServer();
-            pushServerEventsToApp();
             try {
                 sleepPauseTime();
             } catch (InterruptedException ex) {
@@ -70,11 +68,13 @@ class MatrixSynchronizer extends Thread {
                 Thread.currentThread().interrupt();
                 return;
             }
+            talkToServer();
+            pushServerEventsToApp();
         }
     }
 
     private void talkToServer() {
-        if (!active) //If active flag is not set, do nothing, will just sleep all the time
+        if (!retryStateHolder.isActive()) //If active flag is not set, do nothing, will just sleep all the time
             return;
         switch (state) {
             case NOT_CONNECTED:
@@ -107,17 +107,17 @@ class MatrixSynchronizer extends Thread {
     }
 
     private void sleepPauseTime() throws InterruptedException {
-        Thread.sleep(accountConfig.getBetweenSyncPause() * (2L * networkTryNumber - 1)); //Pause increases on fail to make server's life easier
+        Thread.sleep(retryStateHolder.pauseTime()); //Pause increases on fail to make server's life easier
     }
 
     //This method to be called from the main FX application thread to recover after fail if user wants
     public void setRetryOn() {
-        networkTryNumber = 1;
-        active = true;
+        retryStateHolder.reset();
     }
 
     //This method to be called from the main FX application thread to "stop the show"
     public void disconnect() {
+        retryStateHolder.stop();
         keepGoing = false;
     }
 
@@ -128,21 +128,22 @@ class MatrixSynchronizer extends Thread {
     }
 
     private void handleChangeState(State state) {
-        networkTryNumber = 1;
+        retryStateHolder.reset();
         this.state = state;
     }
 
     private void handleNetworkFail(State state, Exception ex) {
-        networkTryNumber++;
-        if (networkTryNumber <= MAX_TRY)
-            return;
-        active = false;
         SystemMessage systemMessage = exceptionConverter.buildSystemMessage(state, accountConfig.getUserId(), ex);
-        addEvent(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_CONNECTION_FAILED, accountConfig, systemMessage));
+        if (retryStateHolder.getTotalWaitTime() < MAX_WAIT_MULTIPLIER * accountConfig.getNetworkTimeout()) {
+            addEvent(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_CONNECTION_ISSUE, accountConfig, systemMessage));
+        } else {
+            retryStateHolder.stop();
+            addEvent(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_CONNECTION_FAILED, accountConfig, systemMessage));
+        }
     }
 
     private void handleResponseFail(State state, Exception ex) {
-        active = false;
+        retryStateHolder.stop();
         SystemMessage systemMessage = exceptionConverter.buildSystemMessage(state, accountConfig.getUserId(), ex);
         addEvent(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_RESPONSE_FAILED, accountConfig, systemMessage));
     }

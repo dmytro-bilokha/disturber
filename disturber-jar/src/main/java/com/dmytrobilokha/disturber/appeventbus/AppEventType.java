@@ -13,6 +13,7 @@ public enum AppEventType {
     , MATRIX_LOGGEDIN(String.class, null)
     , MATRIX_SYNCED(String.class, null)
     , MATRIX_CONNECTION_FAILED(AccountConfig.class, SystemMessage.class)
+    , MATRIX_CONNECTION_ISSUE(AccountConfig.class, SystemMessage.class)
     , MATRIX_RESPONSE_FAILED(AccountConfig.class, SystemMessage.class)
     , MATRIX_OUTGOING_MESSAGE(RoomKey.class, String.class)
     , MATRIX_CMD_CONNECT(null, AccountConfig.class)

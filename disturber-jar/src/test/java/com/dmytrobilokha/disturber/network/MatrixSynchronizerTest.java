@@ -168,17 +168,18 @@ public class MatrixSynchronizerTest {
     }
 
     @Test(timeout = 10000)
-    public void testHandlesConnectionFail() throws ApiConnectException, ApiRequestException {
+    public void testHandlesConnectionIssue() throws ApiConnectException, ApiRequestException {
+        final int tryNum = 5;
         final AtomicInteger counter = new AtomicInteger(0);
-        final List<Long> callTimes = new ArrayList<>(5);
+        final List<Long> callTimes = new ArrayList<>();
         Mockito.doAnswer(invocation -> {
             callTimes.add(System.nanoTime());
-            if (counter.incrementAndGet() >= 5)
+            if (counter.incrementAndGet() >= tryNum)
                 synchronizer.disconnect();
             throw new ApiConnectException("NO_CONNECT", new IOException());
         }).when(apiConnector).login(Mockito.anyObject());
         synchronizer.run();
-        Mockito.verify(apiConnector, Mockito.times(5)).login(Mockito.anyObject());
+        Mockito.verify(apiConnector, Mockito.times(tryNum)).login(Mockito.anyObject());
         Mockito.verify(apiConnector, Mockito.times(0)).sync(Mockito.anyObject());
         assertTrue(callTimes.size() > 2);
         List<Long> pauseTimes = new ArrayList<>();
@@ -189,11 +190,13 @@ public class MatrixSynchronizerTest {
                             + " got following on failure pauses: " + pauseTimes);
         for (int i = 1; i < pauseTimes.size(); i++)
             assertTrue(pauseTimes.get(i) > pauseTimes.get(i - 1));
-        AppEvent<String, SystemMessage> appEventNewMessage = getEventByType(AppEventType.MATRIX_CONNECTION_FAILED);
-        assertNotNull(appEventNewMessage);
-        assertTrue(appEventNewMessage.getPayload().getMessage().contains(accountConfig.getUserId()));
-        String details = appEventNewMessage.getPayload().getDetails();
-        assertTrue(details.contains("NO_CONNECT"));
+        for (int i = 0; i < tryNum; i++) {
+            AppEvent<String, SystemMessage> appEventNewMessage = getEventByType(AppEventType.MATRIX_CONNECTION_ISSUE);
+            assertNotNull(appEventNewMessage);
+            assertTrue(appEventNewMessage.getPayload().getMessage().contains(accountConfig.getUserId()));
+            String details = appEventNewMessage.getPayload().getDetails();
+            assertTrue(details.contains("NO_CONNECT"));
+        }
     }
 
     private void fillMockSyncResponse() {

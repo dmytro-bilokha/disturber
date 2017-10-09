@@ -29,6 +29,7 @@ public class MatrixStateManager {
     private final AppEventListener<String, Void> loginListener = this::handleLogin;
     private final AppEventListener<String, Void> syncListener = this::handleSync;
     private final AppEventListener<AccountConfig, SystemMessage> failListener = this::askForRetryOnFail;
+    private final AppEventListener<AccountConfig, SystemMessage> issueListener = this::notifyOnIssue;
 
     private final TreeItem<RoomsViewItem> root;
     private final Map<String, Account> accountMap = new HashMap<>();
@@ -45,6 +46,7 @@ public class MatrixStateManager {
         eventBus.subscribe(loginListener, AppEventType.MATRIX_LOGGEDIN);
         eventBus.subscribe(syncListener, AppEventType.MATRIX_SYNCED);
         eventBus.subscribe(failListener, AppEventType.MATRIX_CONNECTION_FAILED);
+        eventBus.subscribe(issueListener, AppEventType.MATRIX_CONNECTION_ISSUE);
         eventBus.subscribe(failListener, AppEventType.MATRIX_RESPONSE_FAILED);
     }
 
@@ -99,6 +101,11 @@ public class MatrixStateManager {
     private void storeMatrixEvent(AppEvent<RoomKey, MatrixEvent> appEvent) {
         accountMap.get(appEvent.getClassifier().getUserId())
                 .onEvent(appEvent.getClassifier(), appEvent.getPayload());
+    }
+
+    private void notifyOnIssue(AppEvent<AccountConfig, SystemMessage> issueEvent) {
+        accountMap.get(issueEvent.getClassifier().getUserId())
+                .setState(AccountState.CONNECTING);
     }
 
     private void askForRetryOnFail(AppEvent<AccountConfig, SystemMessage> failEvent) {
