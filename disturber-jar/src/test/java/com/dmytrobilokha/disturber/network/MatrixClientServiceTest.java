@@ -1,7 +1,6 @@
 package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.appeventbus.AppEvent;
-import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.appeventbus.AppEventListener;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
@@ -67,11 +66,8 @@ public class MatrixClientServiceTest {
 
     @Test
     public void testOnStartSubscribes() {
-        List<AppEventType> eventTypesToSubscribe = Arrays.asList(AppEventType.MATRIX_OUTGOING_MESSAGE
-                                                                , AppEventType.MATRIX_CMD_CONNECT
-                                                                , AppEventType.MATRIX_CMD_RETRY);
-        assertEquals(eventTypesToSubscribe.size(), busMocker.getSubscribedEventTypes().size());
-        eventTypesToSubscribe.forEach(eventType -> assertTrue(busMocker.getSubscribedEventTypes().contains(eventType)));
+        busMocker.validateSubscription(AppEventType.MATRIX_OUTGOING_MESSAGE, AppEventType.MATRIX_CMD_CONNECT
+                , AppEventType.MATRIX_CMD_RETRY);
         busMocker.getSubscribedClassifiers().forEach(classifier -> assertTrue(classifier == null));
         busMocker.getSubscribedListeners().forEach(listener -> assertTrue(listener != null));
     }
@@ -95,12 +91,9 @@ public class MatrixClientServiceTest {
     }
 
     private AppEventListener findSubscriber(AppEventType eventType) {
-        for (int i = 0; i < busMocker.getSubscribedEventTypes().size(); i++) {
-            AppEventType subscribedEventType = busMocker.getSubscribedEventTypes().get(i);
-            if (subscribedEventType == eventType)
-                return busMocker.getSubscribedListeners().get(i);
-        }
-        return null;
+        List<AppEventListener> subscribersFound = busMocker.findSubscribers(eventType);
+        assertEquals("Exactly one subscriber expected for " + eventType, 1, subscribersFound.size());
+        return subscribersFound.get(0);
     }
 
     @Test

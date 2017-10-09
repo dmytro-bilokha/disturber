@@ -9,6 +9,8 @@ import org.mockito.Mockito;
 import java.util.ArrayList;
 import java.util.List;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.anyObject;
 
 public class AppEventBusMocker {
@@ -18,6 +20,10 @@ public class AppEventBusMocker {
     private final List<AppEventType> subscribedEventTypes = new ArrayList<>();
     private final List<Object> subscribedClassifiers = new ArrayList<>();
     private final List<AppEvent> eventsFired = new ArrayList<>();
+
+    public AppEventBusMocker() {
+        init();
+    }
 
     public void init() {
         mockBus = Mockito.mock(AppEventBus.class);
@@ -64,6 +70,23 @@ public class AppEventBusMocker {
 
     public List<AppEvent> getEventsFired() {
         return eventsFired;
+    }
+
+    public List<AppEventListener> findSubscribers(AppEventType eventType) {
+        List<AppEventListener> subscribersFound = new ArrayList<>();
+        for (int i = 0; i < subscribedEventTypes.size(); i++) {
+            AppEventType subscribedEventType = subscribedEventTypes.get(i);
+            if (subscribedEventType == eventType)
+                subscribersFound.add(subscribedListeners.get(i));
+        }
+        return subscribersFound;
+    }
+
+    public void validateSubscription(AppEventType... eventTypes) {
+        assertEquals(eventTypes.length, subscribedEventTypes.size());
+        for (AppEventType eventType : eventTypes) {
+            assertTrue("Expected to find subscription for " + eventType, subscribedEventTypes.contains(eventType));
+        }
     }
 
 }
