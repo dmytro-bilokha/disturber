@@ -4,7 +4,6 @@ class ConnectionRetryStateHolder {
 
     private final int startPause;
     private int totalWaitTime;
-    private int pauseTime;
     private boolean active;
 
     ConnectionRetryStateHolder(int startPause) {
@@ -15,14 +14,18 @@ class ConnectionRetryStateHolder {
     }
 
     synchronized int pauseTime() {
-        pauseTime = 2 * pauseTime;
+        int pauseTime;
+        if (!active || totalWaitTime == 0) {
+            pauseTime = startPause;
+        } else {
+            pauseTime = totalWaitTime;
+        }
         totalWaitTime += pauseTime;
         return pauseTime;
     }
 
     synchronized void reset() {
         totalWaitTime = 0;
-        pauseTime = startPause / 2;
         active = true;
     }
 
