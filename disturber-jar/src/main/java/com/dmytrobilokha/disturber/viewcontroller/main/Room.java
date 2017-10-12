@@ -7,9 +7,12 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.TreeItem;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 
 class Room implements RoomsViewItem {
+
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm");
 
     private final RoomKey roomKey;
     private final ViewFactory viewFactory;
@@ -42,9 +45,7 @@ class Room implements RoomsViewItem {
         if (timestamp != null)
             eventBuilder
                     .append('(')
-                    .append(timestamp.getHour())
-                    .append(':')
-                    .append(timestamp.getMinute())
+                    .append(timestamp.format(DATE_TIME_FORMATTER))
                     .append(')');
         eventBuilder
                 .append(' ')
