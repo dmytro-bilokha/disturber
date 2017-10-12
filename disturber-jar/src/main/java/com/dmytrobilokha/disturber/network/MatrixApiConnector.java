@@ -9,6 +9,7 @@ import com.dmytrobilokha.disturber.network.dto.SendEventResponseDto;
 import com.dmytrobilokha.disturber.network.dto.SyncResponseDto;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
+import okhttp3.logging.HttpLoggingInterceptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import retrofit2.Call;
@@ -45,7 +46,10 @@ class MatrixApiConnector {
     }
 
     private OkHttpClient buildConfiguredHttpClient(int networkTimeout, ProxyServer proxyServer) {
+        HttpLoggingInterceptor loggingInterceptor = new HttpLoggingInterceptor(LOG::debug);
+        loggingInterceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
         OkHttpClient.Builder clientBuilder = new OkHttpClient.Builder()
+                .addInterceptor(loggingInterceptor)
                 .readTimeout(networkTimeout, TimeUnit.MILLISECONDS)
                 .connectTimeout(networkTimeout, TimeUnit.MILLISECONDS)
                 .writeTimeout(networkTimeout, TimeUnit.MILLISECONDS)
