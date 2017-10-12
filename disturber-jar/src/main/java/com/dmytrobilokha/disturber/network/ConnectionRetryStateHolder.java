@@ -14,12 +14,9 @@ class ConnectionRetryStateHolder {
     }
 
     synchronized int pauseTime() {
-        int pauseTime;
-        if (!active || totalWaitTime == 0) {
-            pauseTime = startPause;
-        } else {
-            pauseTime = totalWaitTime;
-        }
+        if (!active)
+            return startPause;
+        int pauseTime = totalWaitTime == 0 ? startPause : totalWaitTime;
         totalWaitTime += pauseTime;
         return pauseTime;
     }

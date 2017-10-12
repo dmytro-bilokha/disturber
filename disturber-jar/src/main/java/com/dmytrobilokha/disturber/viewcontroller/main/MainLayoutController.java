@@ -9,6 +9,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeView;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 
 import javax.enterprise.context.Dependent;
 import javax.inject.Inject;
@@ -43,6 +45,7 @@ public class MainLayoutController {
 
     @FXML
     public void initialize() {
+        messageTyped.setOnKeyReleased(this::handleTextAreaKeyEvent);
         roomsView.setCellFactory(new RoomsViewCellFactory());
         List<AccountConfig>  accounts;
         try {
@@ -65,6 +68,11 @@ public class MainLayoutController {
     private void switchActiveChat(Room room) {
         messageListView.setItems(room.getEventsList());
         currentRoomKey = room.getRoomKey();
+    }
+
+    private void handleTextAreaKeyEvent(KeyEvent keyEvent) {
+        if (keyEvent.getCode() == KeyCode.ENTER && keyEvent.isControlDown())
+            sendButtonHandler();
     }
 
 }
