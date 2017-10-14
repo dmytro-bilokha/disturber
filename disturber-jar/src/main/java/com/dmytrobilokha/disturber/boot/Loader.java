@@ -2,6 +2,7 @@ package com.dmytrobilokha.disturber.boot;
 
 import com.dmytrobilokha.disturber.Constants;
 import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
+import com.dmytrobilokha.disturber.viewcontroller.main.MainLayoutController;
 import javafx.application.Application;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -38,10 +39,11 @@ public class Loader extends Application {
     public void start(Stage primaryStage) throws Exception {
         System.out.println("Starting " + Constants.APPLICATION_NAME + "...");
         ViewFactory viewFactory = ContainerManager.getBeanByClass(ViewFactory.class);
-        Parent panel = viewFactory.produceMainLayout();
-        Scene scene = new Scene(panel, 600, 400);
+        ViewFactory.ViewControllerHolder<Parent, MainLayoutController> mainLayoutHolder = viewFactory.produceMainLayout();
+        Scene scene = new Scene(mainLayoutHolder.getView(), 600, 400);
         primaryStage.setTitle(Constants.APPLICATION_TITLE);
         primaryStage.setScene(scene);
+        mainLayoutHolder.getController().setMainStage(primaryStage);
         primaryStage.show();
     }
 

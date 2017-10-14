@@ -11,9 +11,8 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<?import javafx.scene.control.TabPane?>
 <?import javafx.scene.control.ListView?>
-<AnchorPane fx:controller="com.dmytrobilokha.disturber.viewcontroller.main.MainLayoutController"
+<AnchorPane fx:id="mainPane" fx:controller="com.dmytrobilokha.disturber.viewcontroller.main.MainLayoutController"
             maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" xmlns="http://javafx.com/javafx/8.0.82-ea" xmlns:fx="http://javafx.com/fxml/1">
    <children>
       <VBox AnchorPane.bottomAnchor="0" AnchorPane.topAnchor="0" AnchorPane.leftAnchor="0" AnchorPane.rightAnchor="0">

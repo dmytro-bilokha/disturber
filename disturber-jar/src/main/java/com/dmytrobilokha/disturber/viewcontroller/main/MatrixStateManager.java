@@ -36,6 +36,7 @@ public class MatrixStateManager {
     private final AppEventBus eventBus;
     private final ViewFactory viewFactory;
     private Consumer<Room> switchChat;
+    private Runnable notifier;
 
     @Inject
     MatrixStateManager(AppEventBus eventBus, ViewFactory viewFactory) {
@@ -50,8 +51,9 @@ public class MatrixStateManager {
         eventBus.subscribe(failListener, AppEventType.MATRIX_RESPONSE_FAILED);
     }
 
-    void attachToView(TreeView<RoomsViewItem> view, Consumer<Room> switchChat) {
+    void attachToView(TreeView<RoomsViewItem> view, Consumer<Room> switchChat, Runnable notifier) {
         this.switchChat = switchChat;
+        this.notifier = notifier;
         view.setShowRoot(false);
         view.setEditable(false);
         view.setRoot(root);
@@ -101,6 +103,7 @@ public class MatrixStateManager {
     private void storeMatrixEvent(AppEvent<RoomKey, MatrixEvent> appEvent) {
         accountMap.get(appEvent.getClassifier().getUserId())
                 .onEvent(appEvent.getClassifier(), appEvent.getPayload());
+        notifier.run();
     }
 
     private void notifyOnIssue(AppEvent<AccountConfig, SystemMessage> issueEvent) {

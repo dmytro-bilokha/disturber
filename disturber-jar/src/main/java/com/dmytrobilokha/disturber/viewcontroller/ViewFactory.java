@@ -13,6 +13,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TreeItem;
+import javafx.scene.image.Image;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Priority;
 import org.slf4j.Logger;
@@ -123,9 +124,12 @@ public class ViewFactory {
         Event.fireEvent(treeItem, event);
     }
 
-    public Parent produceMainLayout() {
-        ViewControllerHolder<Parent, MainLayoutController> viewControllerHolder = load(MAIN_LAYOUT_FXML);
-        return viewControllerHolder.view;
+    public Image createIcon(AppIcon icon) {
+        return new Image(icon.getLocation());
+    }
+
+    public ViewControllerHolder<Parent, MainLayoutController> produceMainLayout() {
+        return load(MAIN_LAYOUT_FXML);
     }
 
     private <V, C> ViewControllerHolder<V, C> load(String fxmlLocation) {
@@ -141,13 +145,21 @@ public class ViewFactory {
         }
     }
 
-    private static class ViewControllerHolder<V, C> {
+    public static class ViewControllerHolder<V, C> {
         private final V view;
         private final C controller;
 
         private ViewControllerHolder(V view, C controller) {
             this.view = view;
             this.controller = controller;
+        }
+
+        public V getView() {
+            return view;
+        }
+
+        public C getController() {
+            return controller;
         }
     }
 
