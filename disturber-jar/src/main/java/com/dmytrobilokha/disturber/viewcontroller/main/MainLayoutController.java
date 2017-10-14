@@ -103,8 +103,10 @@ public class MainLayoutController {
     }
 
     private void flagMessage() {
-        if (!focused && currentIcon == AppIcon.MAIN_QUIET)
+        if (!focused && currentIcon == AppIcon.MAIN_QUIET) {
             setGotMessageIcon();
+            mainStage.toFront();
+        }
     }
 
     private void handleTextAreaKeyEvent(KeyEvent keyEvent) {
