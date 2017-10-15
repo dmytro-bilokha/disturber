@@ -27,6 +27,7 @@ public class MatrixStateManager {
 
     private final AppEventListener<RoomKey, MatrixEvent> newMatrixEventListener = this::handleMessageEvent;
     private final AppEventListener<RoomKey, MatrixEvent> inviteEventListener = this::handleInviteEvent;
+    private final AppEventListener<RoomKey, Void> joinedEventListener = this::handleJoinedEvent;
     private final AppEventListener<String, Void> loginListener = this::handleLogin;
     private final AppEventListener<String, Void> syncListener = this::handleSync;
     private final AppEventListener<AccountConfig, SystemMessage> failListener = this::askForRetryOnFail;
@@ -46,6 +47,7 @@ public class MatrixStateManager {
         this.root = viewFactory.createTreeRoot();
         eventBus.subscribe(newMatrixEventListener, AppEventType.MATRIX_NEW_EVENT_GOT);
         eventBus.subscribe(inviteEventListener, AppEventType.MATRIX_NEW_INVITE_GOT);
+        eventBus.subscribe(joinedEventListener, AppEventType.MATRIX_JOINED_OK);
         eventBus.subscribe(loginListener, AppEventType.MATRIX_LOGGEDIN);
         eventBus.subscribe(syncListener, AppEventType.MATRIX_SYNCED);
         eventBus.subscribe(failListener, AppEventType.MATRIX_CONNECTION_FAILED);
@@ -79,7 +81,7 @@ public class MatrixStateManager {
     }
 
     private Account addNewAccount(AccountConfig accountConfig) {
-        Account account = new Account(accountConfig, viewFactory, root, switchChat);
+        Account account = new Account(accountConfig, viewFactory, root, switchChat, this::requestJoin);
         accountMap.put(accountConfig.getUserId(), account);
         account.setState(AccountState.CONNECTING);
         eventBus.fire(AppEvent.withPayload(AppEventType.MATRIX_CMD_CONNECT, accountConfig));
@@ -106,6 +108,15 @@ public class MatrixStateManager {
         accountMap.get(appEvent.getClassifier().getUserId())
                 .onEvent(appEvent.getClassifier(), appEvent.getPayload());
         notifier.run();
+    }
+
+    private void handleJoinedEvent(AppEvent<RoomKey, Void> appEvent) {
+        accountMap.get(appEvent.getClassifier().getUserId())
+                .onJoined(appEvent.getClassifier());
+    }
+
+    private void requestJoin(RoomKey roomKey) {
+        eventBus.fire(AppEvent.withClassifier(AppEventType.MATRIX_JOIN, roomKey));
     }
 
     private void handleInviteEvent(AppEvent<RoomKey, MatrixEvent> appEvent) {

@@ -66,7 +66,7 @@ public class MatrixClientServiceTest {
     @Test
     public void testOnStartSubscribes() {
         busMocker.validateSubscription(AppEventType.MATRIX_OUTGOING_MESSAGE, AppEventType.MATRIX_CMD_CONNECT
-                , AppEventType.MATRIX_CMD_RETRY);
+                , AppEventType.MATRIX_CMD_RETRY, AppEventType.MATRIX_JOIN);
         busMocker.getSubscribedClassifiers().forEach(classifier -> assertTrue(classifier == null));
         busMocker.getSubscribedListeners().forEach(listener -> assertTrue(listener != null));
     }

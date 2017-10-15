@@ -38,7 +38,7 @@ class MatrixSynchronizer extends Thread {
     private static final String ROOM_MESSAGE_TYPE = "m.room.message";
     private static final String TEXT_MESSAGE = "m.text";
 
-    private final Queue<OutgoingMessage> appToServerQueue = new ConcurrentLinkedQueue<>();
+    private final Queue<OutgoingEvent> appToServerQueue = new ConcurrentLinkedQueue<>();
     private final AtomicLong messageId = new AtomicLong();
     private final AccountConfig accountConfig;
     private final CrossThreadEventQueue serverToAppQueue;
@@ -266,20 +266,26 @@ class MatrixSynchronizer extends Thread {
     }
 
     private void sendEventsToServer() {
-        OutgoingMessage message;
-        while ((message = appToServerQueue.peek()) != null) {
-            EventContentDto messageContent = new EventContentDto();
-            messageContent.setBody(message.getMessageText());
-            messageContent.setMsgType(TEXT_MESSAGE);
+        OutgoingEvent event;
+        while ((event = appToServerQueue.peek()) != null) {
             try {
-                apiConnector.sendMessageEvent(accessToken, message.getRoomId()
-                        , ROOM_MESSAGE_TYPE, message.getLocalId(), messageContent);
+                switch (event.getType()) { //TODO: change OutgoingEvent to avoid this switch statement
+                    case MESSAGE:
+                        sendMessageEvent(event);
+                        break;
+                    case JOIN:
+                        sendJoinEvent(event);
+                        break;
+                    default:
+                        LOG.error("Unable to handle outgoing event {} because type is not recognized", event);
+                        break;
+                }
             } catch (ApiConnectException ex) {
-                LOG.error("Failed to send message {}, because of input/output error", message, ex);
+                LOG.error("Failed to send event {}, because of input/output error", event, ex);
                 handleNetworkFail(State.MESSAGES_SENT, ex);
                 return;
             } catch (ApiRequestException ex) {
-                LOG.error("Failed to send message {}, got {}", message, ex.getApiError(), ex);
+                LOG.error("Failed to send event {}, got {}", event, ex.getApiError(), ex);
                 handleResponseFail(State.MESSAGES_SENT, ex);
                 return;
             }
@@ -288,10 +294,30 @@ class MatrixSynchronizer extends Thread {
         handleChangeState(State.MESSAGES_SENT);
     }
 
+    private void sendMessageEvent(OutgoingEvent event) throws ApiConnectException, ApiRequestException {
+        EventContentDto messageContent = new EventContentDto();
+        messageContent.setBody(event.getMessageText());
+        messageContent.setMsgType(TEXT_MESSAGE);
+        apiConnector.sendMessageEvent(accessToken, event.getRoomId()
+                , ROOM_MESSAGE_TYPE, event.getLocalId(), messageContent);
+    }
+
+    private void sendJoinEvent(OutgoingEvent event) throws ApiConnectException, ApiRequestException {
+        String roomId = event.getRoomId();
+        apiConnector.joinRoom(accessToken, roomId);
+        addEvent(AppEvent.withClassifier(AppEventType.MATRIX_JOINED_OK, new RoomKey(accountConfig.getUserId(), roomId)));
+    }
+
     //Called from JavaFX application thread
-    public void enqueueOutgoingMessage(String roomId, String message) {
-        OutgoingMessage outgoingMessage = new OutgoingMessage(roomId, message, getNewMessageId());
-        appToServerQueue.add(outgoingMessage);
+    void enqueueOutgoingMessage(String roomId, String message) {
+        OutgoingEvent outgoingEvent = OutgoingEvent.createMessageEvent(roomId, message, getNewMessageId());
+        appToServerQueue.add(outgoingEvent);
+    }
+
+    //Called from JavaFX application thread
+    void enqueueJoin(String roomId) {
+        OutgoingEvent outgoingEvent = OutgoingEvent.createJoinEvent(roomId);
+        appToServerQueue.add(outgoingEvent);
     }
 
     private String getNewMessageId() {

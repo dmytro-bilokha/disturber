@@ -1,6 +1,7 @@
 package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.network.dto.EventContentDto;
+import com.dmytrobilokha.disturber.network.dto.JoinResponseDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
 import com.dmytrobilokha.disturber.network.dto.SendEventResponseDto;
@@ -37,4 +38,11 @@ interface MatrixService {
             , @Path("txnId") String txnId
             , @Query("access_token") String accessToken
             , @Body EventContentDto eventContentDto);
+
+    @POST("_matrix/client/r0/rooms/{roomId}/join")
+    Call<JoinResponseDto> joinRoom(
+            @Path("roomId") String roomId
+            , @Query("access_token") String accessToken
+    );
+
 }

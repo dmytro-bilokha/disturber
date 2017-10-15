@@ -17,6 +17,8 @@ public enum AppEventType {
     , MATRIX_CONNECTION_ISSUE(AccountConfig.class, SystemMessage.class)
     , MATRIX_RESPONSE_FAILED(AccountConfig.class, SystemMessage.class)
     , MATRIX_OUTGOING_MESSAGE(RoomKey.class, String.class)
+    , MATRIX_JOIN(RoomKey.class, null)
+    , MATRIX_JOINED_OK(RoomKey.class, null)
     , MATRIX_CMD_CONNECT(null, AccountConfig.class)
     , MATRIX_CMD_RETRY(null, AccountConfig.class)
     ;

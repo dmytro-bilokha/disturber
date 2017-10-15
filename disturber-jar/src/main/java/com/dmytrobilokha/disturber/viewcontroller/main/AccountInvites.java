@@ -6,17 +6,21 @@ import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
 import javafx.scene.control.TreeItem;
 
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.function.Consumer;
 
 class AccountInvites implements RoomsViewItem {
 
     private final ViewFactory viewFactory;
     private final TreeItem<RoomsViewItem> treeItem;
     private final Map<RoomKey, Invite> inviteMap;
+    private final Consumer<RoomKey> joinRequester;
 
-    AccountInvites(ViewFactory viewFactory, TreeItem<RoomsViewItem> fatherItem) {
+    AccountInvites(ViewFactory viewFactory, TreeItem<RoomsViewItem> fatherItem, Consumer<RoomKey> joinRequester) {
         this.viewFactory = viewFactory;
         this.treeItem = viewFactory.createTreeItem(this, fatherItem);
+        this.joinRequester = joinRequester;
         this.inviteMap = new HashMap<>();
     }
 
@@ -26,7 +30,7 @@ class AccountInvites implements RoomsViewItem {
     }
 
     private Invite addNewInvite(RoomKey roomKey) {
-        Invite invite = new Invite(roomKey, viewFactory, treeItem);
+        Invite invite = new Invite(roomKey, viewFactory, treeItem, joinRequester);
         inviteMap.put(roomKey, invite);
         return invite;
     }
@@ -34,7 +38,19 @@ class AccountInvites implements RoomsViewItem {
     void onInvite(RoomKey roomKey, MatrixEvent event) {
         Invite invite = inviteMap.get(roomKey);
         if (invite == null)
-            invite = addNewInvite(roomKey);
+            addNewInvite(roomKey);
+    }
+
+    void onJoined(RoomKey roomKey) {
+        Invite inviteAccepted = inviteMap.remove(roomKey);
+        for (Iterator<TreeItem<RoomsViewItem>> inviteIterator = treeItem.getChildren().iterator();
+             inviteIterator.hasNext();) {
+            TreeItem<RoomsViewItem>  inviteItem = inviteIterator.next();
+            if (inviteItem.getValue() == inviteAccepted) {
+                inviteIterator.remove();
+                break;
+            }
+        }
     }
 
     @Override

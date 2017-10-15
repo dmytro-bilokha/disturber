@@ -3,6 +3,7 @@ package com.dmytrobilokha.disturber.network;
 import com.dmytrobilokha.disturber.config.account.ProxyServer;
 import com.dmytrobilokha.disturber.network.dto.ErrorDto;
 import com.dmytrobilokha.disturber.network.dto.EventContentDto;
+import com.dmytrobilokha.disturber.network.dto.JoinResponseDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
 import com.dmytrobilokha.disturber.network.dto.SendEventResponseDto;
@@ -85,6 +86,11 @@ class MatrixApiConnector {
             , EventContentDto eventContentDto) throws ApiRequestException, ApiConnectException {
         validateConnection();
         return callServer(matrixService.sendMessageEvent(roomId, eventType, txnId, accessToken, eventContentDto));
+    }
+
+    JoinResponseDto joinRoom(String accessToken, String roomId) throws ApiRequestException, ApiConnectException {
+        validateConnection();
+        return callServer(matrixService.joinRoom(roomId, accessToken));
     }
 
     private <T> T callServer(Call<T> call) throws ApiRequestException, ApiConnectException {

@@ -19,12 +19,12 @@ class Account implements RoomsViewItem {
     private AccountState state;
 
     Account(AccountConfig accountConfig, ViewFactory viewFactory, TreeItem<RoomsViewItem> fatherItem
-            , Consumer<Room> switchChat) {
+            , Consumer<Room> switchChat, Consumer<RoomKey> joinRequester) {
         this.accountConfig = accountConfig;
         this.viewFactory = viewFactory;
         this.treeItem = viewFactory.createTreeItem(this, fatherItem);
         this.accountRooms = new AccountRooms(viewFactory, this.treeItem, switchChat);
-        this.accountInvites = new AccountInvites(viewFactory, this.treeItem);
+        this.accountInvites = new AccountInvites(viewFactory, this.treeItem, joinRequester);
     }
 
     Account setState(AccountState state) {
@@ -58,6 +58,12 @@ class Account implements RoomsViewItem {
         accountInvites.onInvite(roomKey, event);
         return this;
     }
+
+    Account onJoined(RoomKey roomKey) {
+        accountInvites.onJoined(roomKey);
+        return this;
+    }
+
     @Override
     public String getText() {
         return accountConfig.getUserId() + (state == null ? "" : (" (" + state.toString() + ')'));

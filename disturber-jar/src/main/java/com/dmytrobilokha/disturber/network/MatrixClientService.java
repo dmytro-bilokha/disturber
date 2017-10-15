@@ -29,6 +29,7 @@ public class MatrixClientService {
 
     private final Map<String, MatrixSynchronizer> connectedAccounts = new HashMap<>();
     private final AppEventListener<RoomKey, String> outgoingMessageListener = this::enqueueOutgoingMessage;
+    private final AppEventListener<RoomKey, Void> joinRequestListener = this::enqueueJoinRequest;
     private final AppEventListener<Void, AccountConfig> connectCommandListener = this::connect;
     private final AppEventListener<Void, AccountConfig> retryCommandListener = this::setRetryOn;
 
@@ -47,6 +48,7 @@ public class MatrixClientService {
         this.synchronizerFactory = synchronizerFactory;
         this.eventQueue = synchronizerFactory.createCrossThreadEventQueue(this::eventCallback);
         appEventBus.subscribe(outgoingMessageListener, AppEventType.MATRIX_OUTGOING_MESSAGE);
+        appEventBus.subscribe(joinRequestListener, AppEventType.MATRIX_JOIN);
         appEventBus.subscribe(connectCommandListener, AppEventType.MATRIX_CMD_CONNECT);
         appEventBus.subscribe(retryCommandListener, AppEventType.MATRIX_CMD_RETRY);
     }
@@ -89,6 +91,17 @@ public class MatrixClientService {
             return;
         }
         synchronizer.enqueueOutgoingMessage(roomKey.getRoomId(), messageText);
+    }
+
+    private void enqueueJoinRequest(AppEvent<RoomKey, Void> joinEvent) {
+        RoomKey roomKey = joinEvent.getClassifier();
+        MatrixSynchronizer synchronizer = connectedAccounts.get(roomKey.getUserId());
+        if (synchronizer == null) {
+            LOG.error("Requested to send join request {}, but synchronizer for userId='{}' not started"
+                    , joinEvent, roomKey.getUserId());
+            return;
+        }
+        synchronizer.enqueueJoin(roomKey.getRoomId());
     }
 
     @PreDestroy
