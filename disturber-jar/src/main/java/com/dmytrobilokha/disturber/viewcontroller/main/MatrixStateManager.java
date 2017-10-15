@@ -25,7 +25,8 @@ import java.util.function.Consumer;
 @Dependent
 public class MatrixStateManager {
 
-    private final AppEventListener<RoomKey, MatrixEvent> newMatrixEventListener = this::storeMatrixEvent;
+    private final AppEventListener<RoomKey, MatrixEvent> newMatrixEventListener = this::handleMessageEvent;
+    private final AppEventListener<RoomKey, MatrixEvent> inviteEventListener = this::handleInviteEvent;
     private final AppEventListener<String, Void> loginListener = this::handleLogin;
     private final AppEventListener<String, Void> syncListener = this::handleSync;
     private final AppEventListener<AccountConfig, SystemMessage> failListener = this::askForRetryOnFail;
@@ -44,6 +45,7 @@ public class MatrixStateManager {
         this.viewFactory = viewFactory;
         this.root = viewFactory.createTreeRoot();
         eventBus.subscribe(newMatrixEventListener, AppEventType.MATRIX_NEW_EVENT_GOT);
+        eventBus.subscribe(inviteEventListener, AppEventType.MATRIX_NEW_INVITE_GOT);
         eventBus.subscribe(loginListener, AppEventType.MATRIX_LOGGEDIN);
         eventBus.subscribe(syncListener, AppEventType.MATRIX_SYNCED);
         eventBus.subscribe(failListener, AppEventType.MATRIX_CONNECTION_FAILED);
@@ -100,9 +102,15 @@ public class MatrixStateManager {
                 .setState(AccountState.CONNECTED);
     }
 
-    private void storeMatrixEvent(AppEvent<RoomKey, MatrixEvent> appEvent) {
+    private void handleMessageEvent(AppEvent<RoomKey, MatrixEvent> appEvent) {
         accountMap.get(appEvent.getClassifier().getUserId())
                 .onEvent(appEvent.getClassifier(), appEvent.getPayload());
+        notifier.run();
+    }
+
+    private void handleInviteEvent(AppEvent<RoomKey, MatrixEvent> appEvent) {
+        accountMap.get(appEvent.getClassifier().getUserId())
+                .onInvite(appEvent.getClassifier(), appEvent.getPayload());
         notifier.run();
     }
 

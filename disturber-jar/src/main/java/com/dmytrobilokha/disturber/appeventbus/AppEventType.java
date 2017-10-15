@@ -10,6 +10,7 @@ import com.dmytrobilokha.disturber.commonmodel.RoomKey;
  */
 public enum AppEventType {
     MATRIX_NEW_EVENT_GOT(RoomKey.class, MatrixEvent.class)
+    , MATRIX_NEW_INVITE_GOT(RoomKey.class, MatrixEvent.class)
     , MATRIX_LOGGEDIN(String.class, null)
     , MATRIX_SYNCED(String.class, null)
     , MATRIX_CONNECTION_FAILED(AccountConfig.class, SystemMessage.class)

@@ -8,6 +8,7 @@ import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.network.dto.EventContentDto;
 import com.dmytrobilokha.disturber.network.dto.EventDto;
+import com.dmytrobilokha.disturber.network.dto.InvitedRoomDto;
 import com.dmytrobilokha.disturber.network.dto.JoinedRoomDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
@@ -32,6 +33,10 @@ class MatrixSynchronizer extends Thread {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatrixSynchronizer.class);
     private static final int MAX_WAIT_MULTIPLIER = 5;
+    private static final String INVITE = "invite";
+    private static final String ROOM_MEMBER_TYPE = "m.room.member";
+    private static final String ROOM_MESSAGE_TYPE = "m.room.message";
+    private static final String TEXT_MESSAGE = "m.text";
 
     private final Queue<OutgoingMessage> appToServerQueue = new ConcurrentLinkedQueue<>();
     private final AtomicLong messageId = new AtomicLong();
@@ -218,7 +223,13 @@ class MatrixSynchronizer extends Thread {
     }
 
     private List<AppEvent> mapSyncResponseDtoToAppEvents(SyncResponseDto syncResponseDto) {
-        Map<String, JoinedRoomDto> joinedRoomMap = syncResponseDto.getRooms().getJoinedRoomMap();
+        List<AppEvent> appEvents = new ArrayList<>();
+        appEvents.addAll(mapJoinedRoomEvents(syncResponseDto.getRooms().getJoinedRoomMap()));
+        appEvents.addAll(mapInvitedRoomEvents(syncResponseDto.getRooms().getInvitedRoomMap()));
+        return appEvents;
+    }
+
+    private List<AppEvent> mapJoinedRoomEvents(Map<String, JoinedRoomDto> joinedRoomMap) {
         List<AppEvent> appEvents = new ArrayList<>();
         for (Map.Entry<String, JoinedRoomDto> joinedRoomDtoEntry : joinedRoomMap.entrySet()) {
             RoomKey roomKey = new RoomKey(accountConfig.getUserId(), joinedRoomDtoEntry.getKey());
@@ -236,15 +247,33 @@ class MatrixSynchronizer extends Thread {
         return appEvents;
     }
 
+    private  List<AppEvent> mapInvitedRoomEvents(Map<String, InvitedRoomDto> invitedRoomMap) {
+        List<AppEvent> appEvents = new ArrayList<>();
+        for (Map.Entry<String, InvitedRoomDto> invitedRoomDtoEntry : invitedRoomMap.entrySet()) {
+            RoomKey roomKey = new RoomKey(accountConfig.getUserId(), invitedRoomDtoEntry.getKey());
+            List<EventDto> eventDtos = invitedRoomDtoEntry.getValue().getInviteState().getEvents();
+            for (EventDto eventDto : eventDtos) {
+                if (!ROOM_MEMBER_TYPE.equals(eventDto.getType()) || !INVITE.equals(eventDto.getContent().getMembership()))
+                    continue; //Skip all events which are not invites
+                MatrixEvent matrixEvent = matrixEventBuilder
+                        .serverTimestamp(eventDto.getServerTimestamp())
+                        .sender(eventDto.getSender())
+                        .build();
+                appEvents.add(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_NEW_INVITE_GOT, roomKey, matrixEvent));
+            }
+        }
+        return appEvents;
+    }
+
     private void sendEventsToServer() {
         OutgoingMessage message;
         while ((message = appToServerQueue.peek()) != null) {
             EventContentDto messageContent = new EventContentDto();
             messageContent.setBody(message.getMessageText());
-            messageContent.setMsgType("m.text");
+            messageContent.setMsgType(TEXT_MESSAGE);
             try {
                 apiConnector.sendMessageEvent(accessToken, message.getRoomId()
-                        , "m.room.message", message.getLocalId(), messageContent);
+                        , ROOM_MESSAGE_TYPE, message.getLocalId(), messageContent);
             } catch (ApiConnectException ex) {
                 LOG.error("Failed to send message {}, because of input/output error", message, ex);
                 handleNetworkFail(State.MESSAGES_SENT, ex);

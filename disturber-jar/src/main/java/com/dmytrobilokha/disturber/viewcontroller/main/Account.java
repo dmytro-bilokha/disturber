@@ -14,6 +14,7 @@ class Account implements RoomsViewItem {
     private final ViewFactory viewFactory;
     private final AccountConfig accountConfig;
     private final AccountRooms accountRooms;
+    private final AccountInvites accountInvites;
 
     private AccountState state;
 
@@ -23,6 +24,7 @@ class Account implements RoomsViewItem {
         this.viewFactory = viewFactory;
         this.treeItem = viewFactory.createTreeItem(this, fatherItem);
         this.accountRooms = new AccountRooms(viewFactory, this.treeItem, switchChat);
+        this.accountInvites = new AccountInvites(viewFactory, this.treeItem);
     }
 
     Account setState(AccountState state) {
@@ -43,6 +45,7 @@ class Account implements RoomsViewItem {
 
     Account reset() {
         accountRooms.reset();
+        accountInvites.reset();
         return this;
     }
 
@@ -51,6 +54,10 @@ class Account implements RoomsViewItem {
         return this;
     }
 
+    Account onInvite(RoomKey roomKey, MatrixEvent event) {
+        accountInvites.onInvite(roomKey, event);
+        return this;
+    }
     @Override
     public String getText() {
         return accountConfig.getUserId() + (state == null ? "" : (" (" + state.toString() + ')'));
