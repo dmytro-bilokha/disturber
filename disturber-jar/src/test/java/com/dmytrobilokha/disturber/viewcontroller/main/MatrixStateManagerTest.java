@@ -1,21 +1,15 @@
 package com.dmytrobilokha.disturber.viewcontroller.main;
 
-import com.dmytrobilokha.disturber.appeventbus.AppEventBus;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.mockutil.AppEventBusMocker;
-import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
-import org.mockito.Matchers;
-import org.mockito.Mockito;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@Ignore("Ignore during implementing changes phase") //TODO: change the test
+//TODO: refactor MatrixStateManager class to make it more testable
 public class MatrixStateManagerTest {
 
     private final AppEventBusMocker busMocker = new AppEventBusMocker();
@@ -33,39 +27,18 @@ public class MatrixStateManagerTest {
     }
 
     @Test
-    public void testSubscribesToEvents() {
-/*        assertEquals();
-        Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_LOGGEDIN));
-        Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_NEW_EVENT_GOT));*/
-    }
-
-    @Test
-    public void testSubscribesToFailEvents() {
-        AppEventBus mockBus = Mockito.mock(AppEventBus.class);
-        MatrixStateManager keeper = new MatrixStateManager(mockBus, null);
-        Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_CONNECTION_FAILED));
-        Mockito.verify(mockBus, Mockito.times(1)).subscribe(Mockito.anyObject(), Matchers.eq(AppEventType.MATRIX_RESPONSE_FAILED));
-    }
-
-    @Test
-    public void testKeepsHistory() {
-        RoomKey roomKey = new RoomKey("MOCK_USER", "MOCK_ROOM");
-        MatrixEvent mockEvent = getMockEvent();
-/*        newMatrixEventListener
-                .onAppEvent(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_NEW_EVENT_GOT, roomKey, mockEvent));*/
-        //assertEquals(1, stateManager.getRoomEventsHistory(roomKey).size());
-        //assertTrue(mockEvent == stateManager.getRoomEventsHistory(roomKey).get(0));
-    }
-
-    @Test
-    public void testCleansHistoryOnLogin() {
-        RoomKey roomKey = new RoomKey("MOCK_USER", "MOCK_ROOM");
-        MatrixEvent mockEvent = getMockEvent();
-/*        newMatrixEventListener
-                .onAppEvent(AppEvent.withClassifierAndPayload(AppEventType.MATRIX_NEW_EVENT_GOT, roomKey, mockEvent));
-        loginListener
-                .onAppEvent(AppEvent.withClassifier(AppEventType.MATRIX_LOGGEDIN, roomKey.getUserId()));*/
-        //assertTrue(stateManager.getRoomEventsHistory(roomKey).isEmpty());
+    public void testOnStartSubscribes() {
+        busMocker.validateSubscription(
+                AppEventType.MATRIX_NEW_EVENT_GOT
+                , AppEventType.MATRIX_CONNECTION_FAILED
+                , AppEventType.MATRIX_CONNECTION_ISSUE
+                , AppEventType.MATRIX_RESPONSE_FAILED
+                , AppEventType.MATRIX_JOINED_OK
+                , AppEventType.MATRIX_LOGGEDIN
+                , AppEventType.MATRIX_SYNCED
+                , AppEventType.MATRIX_NEW_INVITE_GOT);
+        busMocker.getSubscribedClassifiers().forEach(classifier -> assertTrue(classifier == null));
+        busMocker.getSubscribedListeners().forEach(listener -> assertTrue(listener != null));
     }
 
     private MatrixEvent getMockEvent() {

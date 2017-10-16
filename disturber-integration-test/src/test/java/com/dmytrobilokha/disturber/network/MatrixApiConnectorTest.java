@@ -1,6 +1,7 @@
 package com.dmytrobilokha.disturber.network;
 
 import com.dmytrobilokha.disturber.network.dto.EventContentDto;
+import com.dmytrobilokha.disturber.network.dto.JoinResponseDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
 import com.dmytrobilokha.disturber.network.dto.SendEventResponseDto;
@@ -144,4 +145,20 @@ public class MatrixApiConnectorTest {
         assertEquals("EVENT_ID", sendEventResponseDto.getEventId());
     }
 
+    @Test
+    public void testSendsJoinRequest() throws URISyntaxException, ApiConnectException, ApiRequestException {
+        URI joinRoomUri = new URI("/_matrix/client/r0/rooms/!d41d8cd:matrix.org/join?access_token=ACCESS_TOKEN");
+        httpServerMock.setUriMock(joinRoomUri, new Response(200, JSONSET_BASE + "join.json"));
+        apiConnector.createConnection(baseUrl, NETWORK_TIMEOUT, null);
+        EventContentDto contentDto = new EventContentDto();
+        JoinResponseDto joinResponseDto = apiConnector.joinRoom(
+                "ACCESS_TOKEN"
+                , "!d41d8cd:matrix.org");
+        RequestCapture requestCapture = getFirstAndOnlyRequestCapture();
+        assertEquals("POST", requestCapture.getMethod());
+        assertEquals(joinRoomUri, requestCapture.getUri());
+        String requestJson = requestCapture.getBody();
+        assertTrue(requestJson.isEmpty());
+        assertEquals("!d41d8cd:matrix.org", joinResponseDto.getRoomId());
+    }
 }

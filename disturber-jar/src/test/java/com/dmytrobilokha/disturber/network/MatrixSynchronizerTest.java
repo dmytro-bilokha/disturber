@@ -9,6 +9,8 @@ import com.dmytrobilokha.disturber.config.account.AccountConfig;
 import com.dmytrobilokha.disturber.config.account.MockAccountConfigFactory;
 import com.dmytrobilokha.disturber.network.dto.EventContentDto;
 import com.dmytrobilokha.disturber.network.dto.EventDto;
+import com.dmytrobilokha.disturber.network.dto.InviteStateDto;
+import com.dmytrobilokha.disturber.network.dto.InvitedRoomDto;
 import com.dmytrobilokha.disturber.network.dto.JoinedRoomDto;
 import com.dmytrobilokha.disturber.network.dto.LoginAnswerDto;
 import com.dmytrobilokha.disturber.network.dto.LoginPasswordDto;
@@ -132,7 +134,7 @@ public class MatrixSynchronizerTest {
 
     @Test
     public void testPutsMessagesInQueue() {
-        fillMockSyncResponse();
+        fillMockSyncResponseWithMessage();
         synchronizer.run();
         AppEvent<RoomKey, MatrixEvent> appEventNewMessage = getEventByType(AppEventType.MATRIX_NEW_EVENT_GOT);
         assertNotNull(appEventNewMessage);
@@ -199,7 +201,7 @@ public class MatrixSynchronizerTest {
         }
     }
 
-    private void fillMockSyncResponse() {
+    private void fillMockSyncResponseWithMessage() {
         EventContentDto eventContentDto = new EventContentDto();
         eventContentDto.setMsgType("STR_MSG");
         eventContentDto.setBody("THE_BODY");
@@ -212,6 +214,36 @@ public class MatrixSynchronizerTest {
         JoinedRoomDto joinedRoomDto = new JoinedRoomDto();
         joinedRoomDto.setTimeline(timelineDto);
         firstSyncResponse.getRooms().getJoinedRoomMap().put("THE_ROOM", joinedRoomDto);
+    }
+
+    @Test
+    public void testPutsInvitesInQueue() {
+        fillMockSyncResponseWithInvite();
+        synchronizer.run();
+        AppEvent<RoomKey, MatrixEvent> appEventNewMessage = getEventByType(AppEventType.MATRIX_NEW_INVITE_GOT);
+        assertNotNull(appEventNewMessage);
+        assertEquals(AppEventType.MATRIX_NEW_INVITE_GOT, appEventNewMessage.getType());
+        assertEquals(new RoomKey(loginAnswerDto.getUserId(), "THE_ROOM"), appEventNewMessage.getClassifier());
+        MatrixEvent expectedMatrixEvent = MatrixEvent.newBuilder()
+                .sender("SENDER")
+                .serverTimestamp(1234567890L)
+                .build();
+        assertEquals(expectedMatrixEvent, appEventNewMessage.getPayload());
+    }
+
+    private void fillMockSyncResponseWithInvite() {
+        EventContentDto eventContentDto = new EventContentDto();
+        eventContentDto.setMembership("invite");
+        EventDto eventDto = new EventDto();
+        eventDto.setServerTimestamp(1234567890L);
+        eventDto.setSender("SENDER");
+        eventDto.setContent(eventContentDto);
+        eventDto.setType("m.room.member");
+        InviteStateDto inviteStateDto = new InviteStateDto();
+        inviteStateDto.getEvents().add(eventDto);
+        InvitedRoomDto invitedRoomDto = new InvitedRoomDto();
+        invitedRoomDto.setInviteState(inviteStateDto);
+        firstSyncResponse.getRooms().getInvitedRoomMap().put("THE_ROOM", invitedRoomDto);
     }
 
     private AppEvent getEventByType(AppEventType type) {

@@ -55,7 +55,7 @@ class AccountInvites implements RoomsViewItem {
 
     @Override
     public String getText() {
-        return "Invites";
+        return "Invites"; //TODO: change it here and in the AccountRooms to fetch text from resource bundle, not hardcode
     }
 
 }

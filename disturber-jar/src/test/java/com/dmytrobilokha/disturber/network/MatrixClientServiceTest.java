@@ -133,6 +133,18 @@ public class MatrixClientServiceTest {
     }
 
     @Test
+    public void testSendsJoinRequest() {
+        AccountConfig mockConfig = MockAccountConfigFactory.createMockAccountConfig("1");
+        AppEventListener connectListener = findSubscriber(AppEventType.MATRIX_CMD_CONNECT);
+        connectListener.onAppEvent(AppEvent.withPayload(AppEventType.MATRIX_CMD_CONNECT, mockConfig));
+        AppEventListener joinRequestListener = findSubscriber(AppEventType.MATRIX_JOIN);
+        Mockito.verify(mockSynchronizers.get(0), Mockito.times(0)).enqueueJoin(anyString());
+        joinRequestListener.onAppEvent(AppEvent.withClassifier(
+                AppEventType.MATRIX_JOIN, new RoomKey(mockConfig.getUserId(), "ROOM")));
+        Mockito.verify(mockSynchronizers.get(0), Mockito.times(1)).enqueueJoin("ROOM");
+    }
+
+    @Test
     public void testSetsRetry() {
         AccountConfig mockConfig = MockAccountConfigFactory.createMockAccountConfig("1");
         AppEventListener connectListener = findSubscriber(AppEventType.MATRIX_CMD_CONNECT);
