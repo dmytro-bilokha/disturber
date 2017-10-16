@@ -3,9 +3,11 @@ package com.dmytrobilokha.disturber.viewcontroller.main;
 import com.dmytrobilokha.disturber.appeventbus.AppEventType;
 import com.dmytrobilokha.disturber.mockutil.AppEventBusMocker;
 import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
+import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import static org.junit.Assert.assertTrue;
 
@@ -18,7 +20,7 @@ public class MatrixStateManagerTest {
     @Before
     public void init() {
         busMocker.init();
-        stateManager = new MatrixStateManager(busMocker.getMockBus(), null);
+        stateManager = new MatrixStateManager(busMocker.getMockBus(), Mockito.mock(ViewFactory.class));
     }
 
     @After
