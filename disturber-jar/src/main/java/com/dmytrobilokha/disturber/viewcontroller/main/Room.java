@@ -4,6 +4,7 @@ import com.dmytrobilokha.disturber.commonmodel.MatrixEvent;
 import com.dmytrobilokha.disturber.commonmodel.RoomKey;
 import com.dmytrobilokha.disturber.viewcontroller.ViewFactory;
 import javafx.collections.ObservableList;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeItem;
 
 import java.time.LocalDateTime;
@@ -17,7 +18,7 @@ class Room implements RoomsViewItem {
     private final RoomKey roomKey;
     private final ViewFactory viewFactory;
     private final TreeItem<RoomsViewItem> treeItem;
-    private final ObservableList<String> eventsList;
+    private final ObservableList<TextField> eventsList;
     private final AccountRooms accountRooms;
 
     private int unreadMessages = 0;
@@ -32,7 +33,7 @@ class Room implements RoomsViewItem {
     }
 
     void onEvent(MatrixEvent event) {
-        eventsList.add(formatEvent(event));
+        eventsList.add(viewFactory.createSelectableField(formatEvent(event)));
         if (!active) {
             unreadMessages++;
             viewFactory.updateView(treeItem);
@@ -63,7 +64,7 @@ class Room implements RoomsViewItem {
         }
     }
 
-    ObservableList<String> getEventsList() {
+    ObservableList<TextField> getEventsList() {
         return eventsList;
     }
 

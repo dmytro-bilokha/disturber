@@ -10,6 +10,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.fxml.FXML;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.TextField;
 import javafx.scene.control.TreeView;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
@@ -40,7 +41,7 @@ public class MainLayoutController {
     @FXML
     private TreeView<RoomsViewItem> roomsView;
     @FXML
-    private ListView<String> messageListView;
+    private ListView<TextField> messageListView;
     @FXML
     private TextArea messageTyped;
 
