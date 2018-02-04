@@ -1,10 +1,12 @@
 package com.dmytrobilokha.disturber.network.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * The matrix event DTO class
  */
+@JsonIgnoreProperties(value = {"redacts"})
 public class EventDto {
 
     @JsonProperty(value = "content", required = true)
