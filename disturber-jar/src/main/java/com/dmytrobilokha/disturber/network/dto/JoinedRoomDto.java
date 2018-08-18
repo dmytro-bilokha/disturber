@@ -1,10 +1,12 @@
 package com.dmytrobilokha.disturber.network.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * The matrix Joined Room DTO
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class JoinedRoomDto {
 
     @JsonProperty(value = "unread_notifications", required = true)
