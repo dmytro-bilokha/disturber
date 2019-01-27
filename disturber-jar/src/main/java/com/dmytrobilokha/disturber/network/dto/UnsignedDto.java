@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * The DTO represents Unsigned matrix protocol object
  */
-@JsonIgnoreProperties(value = {"prev_content", "prev_sender", "replaces_state", "redacted_by", "redacted_because"})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class UnsignedDto {
 
     @JsonProperty(value = "age", required = true)

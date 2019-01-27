@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * The matrix event DTO class
  */
-@JsonIgnoreProperties(value = {"redacts"})
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EventDto {
 
     @JsonProperty(value = "content", required = true)

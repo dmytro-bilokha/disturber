@@ -1,5 +1,6 @@
 package com.dmytrobilokha.disturber.network.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.List;
@@ -7,6 +8,7 @@ import java.util.List;
 /**
  * The matrix Ephemeral DTO
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class EphemeralDto {
 
     @JsonProperty(value = "events", required = true)

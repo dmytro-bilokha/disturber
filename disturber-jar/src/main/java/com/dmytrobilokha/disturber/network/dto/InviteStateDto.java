@@ -1,5 +1,6 @@
 package com.dmytrobilokha.disturber.network.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.ArrayList;
@@ -8,6 +9,7 @@ import java.util.List;
 /**
  * The matrix InviteState DTO
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class InviteStateDto {
 
     @JsonProperty(value = "events", required = true)

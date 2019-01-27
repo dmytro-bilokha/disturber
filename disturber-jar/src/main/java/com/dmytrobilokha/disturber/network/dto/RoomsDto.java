@@ -1,5 +1,6 @@
 package com.dmytrobilokha.disturber.network.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.util.HashMap;
@@ -8,6 +9,7 @@ import java.util.Map;
 /**
  * The matrix Rooms DTO
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RoomsDto {
 
     @JsonProperty(value = "leave", required = true)

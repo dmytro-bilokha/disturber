@@ -1,10 +1,12 @@
 package com.dmytrobilokha.disturber.network.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * The response sent in case of error
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ErrorDto {
 
     @JsonProperty(value = "errcode", required = true)

@@ -1,10 +1,12 @@
 package com.dmytrobilokha.disturber.network.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * The response sent on successful join room request
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class JoinResponseDto {
 
     @JsonProperty(value = "room_id", required = true)

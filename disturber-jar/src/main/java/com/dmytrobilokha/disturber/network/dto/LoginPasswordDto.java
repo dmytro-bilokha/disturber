@@ -1,10 +1,12 @@
 package com.dmytrobilokha.disturber.network.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * The DTO used to authentificate with login/password pair
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LoginPasswordDto {
 
 

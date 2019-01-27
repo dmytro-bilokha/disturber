@@ -6,7 +6,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 /**
  * The class represents response of the matrix server to the synchronize request
  */
-@JsonIgnoreProperties(value = {"device_one_time_keys_count", "to_device", "device_lists", "groups"}) //TODO: investigate and fix this
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class SyncResponseDto {
 
     @JsonProperty(value = "next_batch", required = true)

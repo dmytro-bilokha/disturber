@@ -1,10 +1,12 @@
 package com.dmytrobilokha.disturber.network.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * The matrix server response DTO to login attempt
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class LoginAnswerDto {
 
     @JsonProperty(value = "access_token", required = true)
